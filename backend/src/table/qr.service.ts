@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import * as QRCode from 'qrcode';
-import * as jwt from 'jsonwebtoken';
+import QRCode from 'qrcode';
+import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 
 @Injectable()

@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Put,
+  Delete,
   Query,
   Res,
   Header,
@@ -49,6 +50,11 @@ export class TableController {
     @Body('status') status: 'active' | 'inactive',
   ) {
     return this.tableService.changeStatus(id, status);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.tableService.remove(id);
   }
 
   @Post(':id/qr/generate')

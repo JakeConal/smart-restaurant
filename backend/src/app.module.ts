@@ -21,6 +21,7 @@ import { Table } from './schema/table.schema';
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
         entity: [Table],
+        synchronize: true,
       }),
     }),
     TableModule,

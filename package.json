@@ -5,6 +5,13 @@
     "backend",
     "frontend"
   ],
+  "scripts": {
+    "build": "yarn workspace backend build",
+    "start": "yarn workspace backend start:prod"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "typescript": "^5.9.3"
   }

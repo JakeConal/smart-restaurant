@@ -1,18 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { DashboardLayout, TopBar } from '@/components/layout';
-import { StatsCards, TableCard, TableFormModal, QRCodeModal } from '@/components/tables';
-import { Button } from '@/components/ui';
-import { Download, RefreshCw } from 'lucide-react';
-import type { Table, CreateTableDto, UpdateTableDto, TableFilters } from '@/types/table';
-import { tableApi, qrApi, downloadFile } from '@/lib/api';
+import React, { useState, useEffect } from "react";
+import { DashboardLayout, TopBar } from "@/components/layout";
+import {
+  StatsCards,
+  TableCard,
+  TableFormModal,
+  QRCodeModal,
+} from "@/components/tables";
+import { Button } from "@/components/ui";
+import { Download, RefreshCw } from "lucide-react";
+import type {
+  Table,
+  CreateTableDto,
+  UpdateTableDto,
+  TableFilters,
+} from "@/types/table";
+import { tableApi, qrApi, downloadFile } from "@/lib/api";
 
 export default function TablesPage() {
   const [tables, setTables] = useState<Table[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<TableFilters>({});
-  
+
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -21,10 +31,11 @@ export default function TablesPage() {
 
   // Stats
   const totalTables = tables.length;
-  const activeTables = tables.filter((t) => t.status === 'active').length;
-  const qrValidPercentage = totalTables > 0 
-    ? Math.round((tables.filter((t) => t.qrToken).length / totalTables) * 100) 
-    : 0;
+  const activeTables = tables.filter((t) => t.status === "active").length;
+  const qrValidPercentage =
+    totalTables > 0
+      ? Math.round((tables.filter((t) => t.qrToken).length / totalTables) * 100)
+      : 0;
 
   // Load tables
   const loadTables = async () => {
@@ -33,8 +44,8 @@ export default function TablesPage() {
       const data = await tableApi.getAll(filters);
       setTables(data);
     } catch (error) {
-      console.error('Failed to load tables:', error);
-      alert('Failed to load tables');
+      console.error("Failed to load tables:", error);
+      alert("Failed to load tables");
     } finally {
       setLoading(false);
     }
@@ -60,10 +71,12 @@ export default function TablesPage() {
 
   // Toggle table status
   const handleToggleStatus = async (table: Table) => {
-    const newStatus = table.status === 'active' ? 'inactive' : 'active';
-    
-    if (newStatus === 'inactive') {
-      if (!confirm(`Are you sure you want to deactivate ${table.tableNumber}?`)) {
+    const newStatus = table.status === "active" ? "inactive" : "active";
+
+    if (newStatus === "inactive") {
+      if (
+        !confirm(`Are you sure you want to deactivate ${table.tableNumber}?`)
+      ) {
         return;
       }
     }
@@ -72,8 +85,8 @@ export default function TablesPage() {
       await tableApi.updateStatus(table.id, newStatus);
       await loadTables();
     } catch (error) {
-      console.error('Failed to update status:', error);
-      alert('Failed to update table status');
+      console.error("Failed to update status:", error);
+      alert("Failed to update table status");
     }
   };
 
@@ -91,7 +104,11 @@ export default function TablesPage() {
 
   // Delete table
   const handleDelete = async (table: Table) => {
-    if (!confirm(`Are you sure you want to delete table ${table.tableNumber}? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete table ${table.tableNumber}? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -99,8 +116,8 @@ export default function TablesPage() {
       await tableApi.delete(table.id);
       await loadTables();
     } catch (error) {
-      console.error('Failed to delete table:', error);
-      alert('Failed to delete table');
+      console.error("Failed to delete table:", error);
+      alert("Failed to delete table");
     }
   };
 
@@ -108,26 +125,30 @@ export default function TablesPage() {
   const handleDownloadAllPDF = async () => {
     try {
       const blob = await qrApi.downloadAllPDF();
-      downloadFile(blob, 'all-tables-qr.pdf');
+      downloadFile(blob, "all-tables-qr.pdf");
     } catch (error) {
-      console.error('Failed to download all QR codes:', error);
-      alert('Failed to download QR codes');
+      console.error("Failed to download all QR codes:", error);
+      alert("Failed to download QR codes");
     }
   };
 
   const handleDownloadAllZIP = async () => {
     try {
       const blob = await qrApi.downloadAllZIP();
-      downloadFile(blob, 'all-tables-qr.zip');
+      downloadFile(blob, "all-tables-qr.zip");
     } catch (error) {
-      console.error('Failed to download all QR codes:', error);
-      alert('Failed to download QR codes');
+      console.error("Failed to download all QR codes:", error);
+      alert("Failed to download QR codes");
     }
   };
 
   // Regenerate all QR codes
   const handleRegenerateAll = async () => {
-    if (!confirm('Are you sure you want to regenerate ALL QR codes? All existing codes will become invalid.')) {
+    if (
+      !confirm(
+        "Are you sure you want to regenerate ALL QR codes? All existing codes will become invalid.",
+      )
+    ) {
       return;
     }
 
@@ -136,8 +157,8 @@ export default function TablesPage() {
       await loadTables();
       alert(`Successfully regenerated ${result.count} QR codes!`);
     } catch (error) {
-      console.error('Failed to regenerate QR codes:', error);
-      alert('Failed to regenerate QR codes');
+      console.error("Failed to regenerate QR codes:", error);
+      alert("Failed to regenerate QR codes");
     }
   };
 
@@ -162,8 +183,10 @@ export default function TablesPage() {
       <div className="flex items-center justify-between px-1">
         <div className="flex gap-2">
           <select
-            value={filters.status || ''}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
+            value={filters.status || ""}
+            onChange={(e) =>
+              setFilters({ ...filters, status: e.target.value as any })
+            }
             className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none"
           >
             <option value="">All Status</option>
@@ -172,8 +195,10 @@ export default function TablesPage() {
           </select>
 
           <select
-            value={filters.sortBy || ''}
-            onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}
+            value={filters.sortBy || ""}
+            onChange={(e) =>
+              setFilters({ ...filters, sortBy: e.target.value as any })
+            }
             className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none"
           >
             <option value="">Sort By</option>
@@ -184,13 +209,28 @@ export default function TablesPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={handleDownloadAllPDF} icon={Download}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDownloadAllPDF}
+            icon={Download}
+          >
             Download All (PDF)
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleDownloadAllZIP} icon={Download}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDownloadAllZIP}
+            icon={Download}
+          >
             Download All (ZIP)
           </Button>
-          <Button variant="ghost" size="sm" onClick={loadTables} icon={RefreshCw}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadTables}
+            icon={RefreshCw}
+          >
             Refresh
           </Button>
         </div>
@@ -198,7 +238,9 @@ export default function TablesPage() {
 
       {/* Tables Grid */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-2 pb-4">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 px-1">All Tables</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4 px-1">
+          All Tables
+        </h3>
 
         {loading ? (
           <div className="text-center py-12">
@@ -207,7 +249,11 @@ export default function TablesPage() {
         ) : tables.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-400 font-medium">No tables found</p>
-            <Button variant="primary" onClick={() => setShowCreateModal(true)} className="mt-4">
+            <Button
+              variant="primary"
+              onClick={() => setShowCreateModal(true)}
+              className="mt-4"
+            >
               Create First Table
             </Button>
           </div>
@@ -253,7 +299,7 @@ export default function TablesPage() {
             setShowQRModal(false);
             setSelectedTable(undefined);
           }}
-          table={tables.find(t => t.id === selectedTable.id) || selectedTable}
+          table={tables.find((t) => t.id === selectedTable.id) || selectedTable}
           onRegenerate={loadTables}
         />
       )}

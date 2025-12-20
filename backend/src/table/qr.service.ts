@@ -114,11 +114,12 @@ export class QrService {
 
       // QR Code
       const qrImageBuffer = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
-      doc.image(qrImageBuffer, {
-        fit: [250, 250],
-        align: 'center',
+      const qrSize = 250;
+      doc.image(qrImageBuffer, (doc.page.width - qrSize) / 2, doc.y, {
+        fit: [qrSize, qrSize],
       });
 
+      doc.y += qrSize;
       doc.moveDown(1);
 
       // Instruction text
@@ -193,11 +194,12 @@ export class QrService {
 
         // QR Code
         const qrImageBuffer = Buffer.from(table.qrCodeDataUrl.split(',')[1], 'base64');
-        doc.image(qrImageBuffer, {
-          fit: [250, 250],
-          align: 'center',
+        const qrSize = 250;
+        doc.image(qrImageBuffer, (doc.page.width - qrSize) / 2, doc.y, {
+          fit: [qrSize, qrSize],
         });
 
+        doc.y += qrSize;
         doc.moveDown(1);
 
         // Instruction text

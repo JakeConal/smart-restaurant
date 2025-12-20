@@ -20,7 +20,7 @@ import { Table } from './schema/table.schema';
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entity: [Table],
+        entities: [Table],
         synchronize: true,
       }),
     }),

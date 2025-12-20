@@ -38,7 +38,18 @@ export class TableService {
       status: 'active',
     });
 
-    return this.tableRepo.save(table);
+    const savedTable = await this.tableRepo.save(table);
+
+    // Generate QR code automatically for new table
+    try {
+      const token = this.qrService.generateToken(savedTable.id);
+      savedTable.qrToken = token;
+      savedTable.qrTokenCreatedAt = new Date();
+      return await this.tableRepo.save(savedTable);
+    } catch (error) {
+      console.error('Failed to generate initial QR code:', error);
+      return savedTable;
+    }
   }
 
   async findAll(query: {
@@ -95,6 +106,11 @@ export class TableService {
 
     table.status = status;
     return this.tableRepo.save(table);
+  }
+
+  async remove(id: string): Promise<void> {
+    const table = await this.findOne(id);
+    await this.tableRepo.remove(table);
   }
 
   async generateQrCode(id: string): Promise<{

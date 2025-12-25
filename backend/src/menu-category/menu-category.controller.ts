@@ -13,13 +13,7 @@ import { CreateMenuCategoryDto } from 'src/dto/create-menu-category.dto';
 import { UpdateMenuCategoryDto } from 'src/dto/update-menu-category.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guards';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-
-interface User {
-  userId: string;
-  email: string;
-  role: string;
-  restaurantId: string;
-}
+import type { AuthUser } from '../auth/interfaces/auth-user.interface';
 
 @Controller('api/admin/menu/categories')
 @UseGuards(JwtAuthGuard)
@@ -27,18 +21,18 @@ export class MenuCategoryController {
   constructor(private readonly service: MenuCategoryService) {}
 
   @Post()
-  create(@CurrentUser() user: User, @Body() dto: CreateMenuCategoryDto) {
+  create(@CurrentUser() user: AuthUser, @Body() dto: CreateMenuCategoryDto) {
     return this.service.create(user.restaurantId, dto);
   }
 
   @Get()
-  findAll(@CurrentUser() user: User) {
+  findAll(@CurrentUser() user: AuthUser) {
     return this.service.findAll(user.restaurantId);
   }
 
   @Put(':id')
   update(
-    @CurrentUser() user: User,
+    @CurrentUser() user: AuthUser,
     @Param('id') id: string,
     @Body() dto: UpdateMenuCategoryDto,
   ) {
@@ -46,7 +40,7 @@ export class MenuCategoryController {
   }
 
   @Patch(':id/status')
-  deactivate(@CurrentUser() user: User, @Param('id') id: string) {
+  deactivate(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.service.deactivate(id, user.restaurantId);
   }
 }

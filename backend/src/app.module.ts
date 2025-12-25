@@ -8,9 +8,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Table } from './schema/table.schema';
 import { MenuCategory } from './schema/menu-category.schema';
 import { Users } from './schema/user.schema';
+import { MenuItem } from './schema/menu-item.schema';
 import { MenuCategoryModule } from './menu-category/menu-category.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { MenuItemModule } from './menu-item/menu-item.module';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { UsersModule } from './users/users.module';
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [Table, MenuCategory, Users],
+        entities: [Table, MenuCategory, Users, MenuItem],
         synchronize: true,
       }),
     }),
@@ -34,6 +36,7 @@ import { UsersModule } from './users/users.module';
     MenuCategoryModule,
     AuthModule,
     UsersModule,
+    MenuItemModule,
   ],
   controllers: [AppController],
   providers: [AppService],

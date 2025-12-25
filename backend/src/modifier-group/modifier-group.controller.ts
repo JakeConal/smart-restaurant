@@ -5,7 +5,7 @@ import type { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { CreateModifierGroupDto } from '../dto/create-modifier-group.dto';
 import { ModifierGroupService } from './modifier-group.service';
 
-@Controller('/modifier-group')
+@Controller('/modifier-groups')
 @UseGuards(JwtAuthGuard)
 export class ModifierGroupController {
   constructor(private readonly service: ModifierGroupService) {}

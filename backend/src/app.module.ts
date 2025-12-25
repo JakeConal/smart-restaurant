@@ -6,6 +6,9 @@ import { MenuModule } from './menu/menu.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Table } from './schema/table.schema';
+import { MenuCategoryService } from './menu-category/menu-category.service';
+import { MenuCategoryController } from './menu-category/menu-category.controller';
+import { MenuCategoryModule } from './menu-category/menu-category.module';
 
 @Module({
   imports: [
@@ -26,8 +29,9 @@ import { Table } from './schema/table.schema';
     }),
     TableModule,
     MenuModule,
+    MenuCategoryModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, MenuCategoryController],
+  providers: [AppService, MenuCategoryService],
 })
 export class AppModule {}

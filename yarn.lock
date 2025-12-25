@@ -1797,6 +1797,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nestjs/mapped-types@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@nestjs/mapped-types@npm:2.1.0"
+  peerDependencies:
+    "@nestjs/common": ^10.0.0 || ^11.0.0
+    class-transformer: ^0.4.0 || ^0.5.0
+    class-validator: ^0.13.0 || ^0.14.0
+    reflect-metadata: ^0.1.12 || ^0.2.0
+  peerDependenciesMeta:
+    class-transformer:
+      optional: true
+    class-validator:
+      optional: true
+  checksum: 10c0/cd9f9236648d8a146a4e6890009415400cca7959c3976acdf6fec2ddddc73546d174e58f935b96c6b2319dc54c76e58a39bf47f41991bcd27d1cb55bca99474e
+  languageName: node
+  linkType: hard
+
 "@nestjs/platform-express@npm:^11.0.1":
   version: 11.1.9
   resolution: "@nestjs/platform-express@npm:11.1.9"
@@ -10152,6 +10169,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "smart-restaurant@workspace:."
   dependencies:
+    "@nestjs/mapped-types": "npm:^2.1.0"
     typescript: "npm:^5.9.3"
   languageName: unknown
   linkType: soft

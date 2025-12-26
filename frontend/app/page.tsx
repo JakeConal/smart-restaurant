@@ -1,19 +1,26 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { authApi } from "@/lib/api";
+
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect based on auth status
+    if (authApi.isAuthenticated()) {
+      router.push("/tables");
+    } else {
+      router.push("/login");
+    }
+  }, [router]);
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
-          Smart Restaurant Admin
-        </h1>
-        <p className="text-gray-500 font-medium mb-8">
-          Manage your restaurant tables and QR codes
-        </p>
-        <a
-          href="/tables"
-          className="inline-block bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:scale-[1.02] transition-all"
-        >
-          Go to Tables →
-        </a>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-700 mx-auto mb-4"></div>
+        <p className="text-gray-500">Redirecting...</p>
       </div>
     </div>
   );

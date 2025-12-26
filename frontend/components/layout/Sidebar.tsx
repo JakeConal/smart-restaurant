@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Layers, Utensils, Users2, Settings2, ChefHat } from 'lucide-react';
+import { LayoutGrid, Layers, Utensils, Users2, Settings2, ChefHat, LogOut } from 'lucide-react';
+import { authApi } from '@/lib/api';
 
 const menuItems = [
   { icon: LayoutGrid, label: 'Overview', href: '/dashboard' },
@@ -14,6 +15,10 @@ const menuItems = [
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+
+  const handleLogout = () => {
+    authApi.logout();
+  };
 
   return (
     <aside className="w-24 lg:w-64 bg-white rounded-[1.75rem] border border-slate-200/10 shadow-md flex flex-col h-full py-6 px-4">
@@ -65,6 +70,14 @@ export const Sidebar: React.FC = () => {
           <Settings2 className="w-6 h-6 group-hover:rotate-90 transition-transform" />
           <span className="font-semibold hidden lg:block">Settings</span>
         </Link>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-4 px-4 py-3.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all group w-full"
+        >
+          <LogOut className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          <span className="font-semibold hidden lg:block">Logout</span>
+        </button>
       </nav>
     </aside>
   );

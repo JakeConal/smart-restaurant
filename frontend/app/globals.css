@@ -5,9 +5,53 @@
   --foreground: #212529;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-plus-jakarta-sans), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-ivory-50: #FEFEFE;
+  --color-ivory-100: #FDFCFA;
+  --color-ivory-200: #FAF8F4;
+
+  --color-slate-50: #F8F9FA;
+  --color-slate-100: #F1F3F5;
+  --color-slate-200: #E9ECEF;
+  --color-slate-300: #DEE2E6;
+  --color-slate-400: #CED4DA;
+  --color-slate-500: #ADB5BD;
+  --color-slate-600: #868E96;
+  --color-slate-700: #495057;
+  --color-slate-800: #343A40;
+  --color-slate-900: #212529;
+
+  --color-gold-50: #fefce8;
+  --color-gold-500: #ca8a04;
+  --color-gold-600: #a16207;
+
+  --color-premium-beige: #FAFAF9;
+  --color-premium-black: #1C1917;
+  --color-premium-gray: #44403C;
+  --color-premium-border: rgba(0, 0, 0, 0.05);
+
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+
+  --shadow-soft: 0 4px 20px -2px rgba(173, 181, 189, 0.08);
+  --shadow-hover: 0 10px 25px -5px rgba(173, 181, 189, 0.15);
+
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-skeleton: skeleton 1.5s infinite linear;
+
+  @keyframes slide-up {
+    0% { transform: translateY(100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
 }
 
 body {

@@ -29,6 +29,15 @@ const config: Config = {
           800: '#343A40',
           900: '#212529',
         },
+        // Guest Menu Colors
+        gold: {
+          500: '#ca8a04',
+          600: '#a16207',
+        },
+        'premium-beige': '#FAFAF9',
+        'premium-black': '#1C1917',
+        'premium-gray': '#44403C',
+        'premium-border': 'rgba(0, 0, 0, 0.05)',
       },
       borderRadius: {
         '3xl': '1.5rem',
@@ -37,6 +46,20 @@ const config: Config = {
       boxShadow: {
         'soft': '0 4px 20px -2px rgba(173, 181, 189, 0.08)',
         'hover': '0 10px 25px -5px rgba(173, 181, 189, 0.15)',
+      },
+      animation: {
+        'slide-up': 'slide-up 0.3s ease-out',
+        'skeleton': 'skeleton 1.5s infinite linear',
+      },
+      keyframes: {
+        'slide-up': {
+          '0%': { transform: 'translateY(100%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'skeleton': {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
       },
     },
   },

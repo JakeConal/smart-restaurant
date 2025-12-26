@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Menu | Premium Guest Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: {
+                            50: '#fffbf0',
+                            100: '#fef3d1',
+                            200: '#fbe4a0',
+                            300: '#f8d06a',
+                            400: '#f5b53b',
+                            500: '#ca8a04', // Gold accent
+                            600: '#a16207',
+                            700: '#854d0e',
+                            800: '#713f12',
+                            900: '#633112',
+                        },
+                        premium: {
+                            black: '#1C1917',
+                            gray: '#44403C',
+                            beige: '#FAFAF9',
+                            border: '#D6D3D1',
+                        }
+                    },
+                    animation: {
+                        'slide-up': 'slide-up 0.3s ease-out forwards',
+                        'fade-in': 'fade-in 0.2s ease-out forwards',
+                        'skeleton': 'skeleton 1.5s infinite linear',
+                    },
+                    keyframes: {
+                        'slide-up': {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        },
+                        'fade-in': {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        'skeleton': {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @layer base {
+            body { @apply bg-premium-beige text-premium-black antialiased overflow-x-hidden; cursor: default; }
+            * { -webkit-tap-highlight-color: transparent; }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s infinite linear;
+        }
+
+        .bottom-sheet {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bottom-sheet.hidden-state {
+            transform: translateY(100%);
+        }
+
+        .bottom-sheet.visible-state {
+            transform: translateY(0);
+        }
+
+        .tab-active {
+            @apply bg-premium-black text-white shadow-lg;
+        }
+
+        .chip-active {
+            @apply bg-gold-500 text-white border-gold-500;
+        }
+
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+<body class="safe-bottom">
+
+    <!-- Skeleton Loader -->
+    <div id="skeleton-loader" class="fixed inset-0 z-[100] bg-premium-beige p-4 space-y-6">
+        <div class="h-12 flex justify-between items-center mb-8">
+            <div class="space-y-2">
+                <div class="w-32 h-6 skeleton rounded-md"></div>
+                <div class="w-20 h-4 skeleton rounded-md opacity-60"></div>
+            </div>
+            <div class="w-10 h-10 skeleton rounded-full"></div>
+        </div>
+        <div class="flex space-x-3 overflow-hidden">
+            <div class="w-20 h-8 skeleton rounded-full flex-shrink-0"></div>
+            <div class="w-24 h-8 skeleton rounded-full flex-shrink-0"></div>
+            <div class="w-20 h-8 skeleton rounded-full flex-shrink-0"></div>
+            <div class="w-24 h-8 skeleton rounded-full flex-shrink-0"></div>
+        </div>
+        <div class="space-y-4">
+            <div class="h-32 skeleton rounded-2xl w-full"></div>
+            <div class="h-32 skeleton rounded-2xl w-full"></div>
+            <div class="h-32 skeleton rounded-2xl w-full"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="hidden opacity-0 transition-opacity duration-500">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-40 glass border-b border-black/5 px-4 pt-4 pb-3">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">Antigravity Bistro</h1>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+                            Open Now
+                        </span>
+                        <span class="text-xs text-premium-gray px-1.5 opacity-60">Table #12</span>
+                    </div>
+                </div>
+                <button class="p-2.5 rounded-full bg-white border border-premium-border/30 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </button>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="flex space-x-2">
+                <div class="relative flex-1">
+                    <input type="text" id="menu-search" placeholder="Search dishes..." 
+                           class="w-full pl-10 pr-4 py-3 bg-premium-beige/50 border border-premium-border/40 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 transition-all">
+                    <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-premium-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <button onclick="toggleBottomSheet('sort-sheet')" class="px-3.5 py-3 bg-white border border-premium-border/40 rounded-2xl shadow-sm active:scale-95 transition-transform">
+                    <svg class="w-5 h-5 text-premium-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Category Tabs -->
+        <nav class="sticky top-[138px] z-30 glass py-3 px-4 flex space-x-2 overflow-x-auto no-scrollbar border-b border-black/5">
+            <template id="category-template">
+                <button class="tab-btn whitespace-nowrap px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 border border-transparent">
+                    {name}
+                </button>
+            </template>
+            <div id="category-list" class="flex space-x-2"></div>
+        </nav>
+
+        <!-- Quick Filters -->
+        <div class="px-4 py-4 flex space-x-2 overflow-x-auto no-scrollbar">
+            <button onclick="toggleFilter('chef')" data-filter="chef" class="filter-chip whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold border border-premium-border/40 bg-white shadow-sm flex items-center space-x-1 transition-all">
+                <svg class="w-3.5 h-3.5 text-gold-500" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
+                <span>Chef's Pick</span>
+            </button>
+            <button onclick="toggleFilter('available')" data-filter="available" class="filter-chip whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold border border-premium-border/40 bg-white shadow-sm transition-all">
+                Available
+            </button>
+            <button onclick="toggleFilter('under50')" data-filter="under50" class="filter-chip whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold border border-premium-border/40 bg-white shadow-sm transition-all">
+                Under 50k
+            </button>
+            <button onclick="toggleFilter('fast')" data-filter="fast" class="filter-chip whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold border border-premium-border/40 bg-white shadow-sm transition-all">
+                Fast (≤15m)
+            </button>
+        </div>
+
+        <!-- Menu List -->
+        <main class="px-4 pb-32">
+            <div id="menu-items" class="space-y-4">
+                <!-- Items injected here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden py-20 text-center space-y-4">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="space-y-1">
+                    <p class="font-bold text-gray-600">No dishes found</p>
+                    <p class="text-sm text-gray-400">Try adjusting your filters or search</p>
+                </div>
+                <button onclick="resetFilters()" class="text-gold-500 font-semibold text-sm underline">Reset all filters</button>
+            </div>
+        </main>
+
+        <!-- Cart Bar (Mini) -->
+        <div id="cart-bar" class="fixed bottom-6 left-4 right-4 z-50 transform translate-y-24 transition-transform duration-300">
+            <button onclick="toggleBottomSheet('cart-sheet')" class="w-full bg-premium-black text-white p-4 rounded-3xl shadow-2xl flex items-center justify-between active:scale-[0.98] transition-all">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-gold-500 text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-premium-black">0</span>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-[10px] text-white/50 uppercase tracking-widest font-bold">Your Order</p>
+                        <p id="cart-total" class="text-sm font-semibold">0đ</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-bold uppercase tracking-wide">View Cart</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modals & Sheets Backdrop -->
+    <div id="backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300" onclick="closeAllSheets()"></div>
+
+    <!-- Item Detail Sheet -->
+    <div id="detail-sheet" class="bottom-sheet hidden-state fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-[32px] max-h-[92vh] overflow-y-auto no-scrollbar shadow-2xl overflow-hidden">
+        <div class="sticky top-0 z-10 glass border-b border-black/5 flex items-center justify-between p-4">
+            <h3 class="font-bold">Dish Details</h3>
+            <button onclick="closeBottomSheet('detail-sheet')" class="p-2 hover:bg-gray-100 rounded-full">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="detail-content" class="pb-32 px-4 pt-2">
+            <!-- Details injected here -->
+        </div>
+        <div class="fixed bottom-0 left-0 right-0 glass border-t border-black/5 p-4 flex items-center space-x-4">
+            <div class="flex-1">
+                <p class="text-[10px] text-premium-gray font-bold uppercase opacity-60">Total Price</p>
+                <p id="detail-total" class="text-lg font-bold text-gold-600">0đ</p>
+            </div>
+            <button id="add-to-cart-btn" onclick="addToCartFromDetail()" class="flex-[2] bg-premium-black text-white py-4 rounded-2xl font-bold active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none">
+                Add to Cart
+            </button>
+        </div>
+    </div>
+
+    <!-- Cart Sheet -->
+    <div id="cart-sheet" class="bottom-sheet hidden-state fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-[32px] h-[90vh] flex flex-col shadow-2xl">
+        <div class="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-100">
+            <div>
+                <h3 class="text-xl font-bold">Your Tray</h3>
+                <p class="text-sm text-gray-500" id="cart-summary-text">0 items added</p>
+            </div>
+            <button onclick="closeBottomSheet('cart-sheet')" class="p-2 bg-gray-50 rounded-full">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="cart-items-list" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <!-- Cart items injected here -->
+        </div>
+        <div class="flex-shrink-0 p-6 glass border-t border-black/5 space-y-4">
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm text-premium-gray">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">0đ</span>
+                </div>
+                <div class="flex justify-between text-sm text-premium-gray">
+                    <span>Tax (10%)</span>
+                    <span id="cart-tax">0đ</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold border-t border-dashed border-gray-200 pt-2">
+                    <span>Total</span>
+                    <span id="cart-grand-total">0đ</span>
+                </div>
+            </div>
+            <button onclick="checkoutDemo()" class="w-full bg-gold-500 text-white py-4 rounded-2xl font-bold shadow-xl shadow-gold-500/20 active:scale-95 transition-all">
+                Place Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Sort Sheet -->
+    <div id="sort-sheet" class="bottom-sheet hidden-state fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-[32px] p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold">Sort Dishes By</h3>
+            <button onclick="closeBottomSheet('sort-sheet')" class="text-sm font-semibold text-gray-400">Done</button>
+        </div>
+        <div class="space-y-4">
+            <label class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl cursor-pointer has-[:checked]:bg-gold-50/50 has-[:checked]:border-gold-500 transition-all">
+                <span class="font-medium">Most Popular</span>
+                <input type="radio" name="sort" value="popularity" checked onchange="handleSort(this.value)" class="w-5 h-5 accent-gold-500">
+            </label>
+            <label class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl cursor-pointer has-[:checked]:bg-gold-50/50 has-[:checked]:border-gold-500 transition-all">
+                <span class="font-medium">Price: Low to High</span>
+                <input type="radio" name="sort" value="price_asc" onchange="handleSort(this.value)" class="w-5 h-5 accent-gold-500">
+            </label>
+            <label class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl cursor-pointer has-[:checked]:bg-gold-50/50 has-[:checked]:border-gold-500 transition-all">
+                <span class="font-medium">Newest First</span>
+                <input type="radio" name="sort" value="newest" onchange="handleSort(this.value)" class="w-5 h-5 accent-gold-500">
+            </label>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[100] pointer-events-none space-y-2"></div>
+
+    <script>
+        // Data
+        const menuCategories = ["All", "Signature", "Appetizers", "Main Course", "Drinks", "Desserts"];
+        
+        const menuItems = [
+            {
+                id: 1,
+                name: "Wagyu Signature Burger",
+                category: "Signature",
+                price: 185000,
+                description: "Highest grade Wagyu beef, truffle aioli, gold-leaf bun, and aged cheddar.",
+                image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=600",
+                status: "available",
+                is_chef_recommended: true,
+                prep_time: "15-20m",
+                popularity: 100,
+                created_at: "2023-10-01"
+            },
+            {
+                id: 2,
+                name: "Truffle Parm Fries",
+                category: "Appetizers",
+                price: 49000,
+                description: "Hand-cut triple-fried potato with black winter truffle and 24-month aged parmesan.",
+                image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&q=80&w=600",
+                status: "available",
+                is_chef_recommended: true,
+                prep_time: "8-10m",
+                popularity: 90,
+                created_at: "2023-11-01"
+            },
+            {
+                id: 3,
+                name: "Ceremonial Matcha Latte",
+                category: "Drinks",
+                price: 65000,
+                description: "Kyoto ceremonial grade matcha prepared with creamy oat milk and organic honey.",
+                image: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&q=80&w=600",
+                status: "sold_out",
+                is_chef_recommended: false,
+                prep_time: "5m",
+                popularity: 75,
+                created_at: "2023-12-01"
+            },
+            {
+                id: 4,
+                name: "Crispy Salmon Skewers",
+                category: "Appetizers",
+                price: 125000,
+                description: "Fresh Norwegian salmon with miso glaze and toasted sesame seeds.",
+                image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=600",
+                status: "available",
+                is_chef_recommended: false,
+                prep_time: "12m",
+                popularity: 82,
+                created_at: "2024-01-01"
+            },
+            {
+                id: 5,
+                name: "Golden Lava Bun",
+                category: "Desserts",
+                price: 35000,
+                description: "Soft steamed bun with salted egg yolk custard that flows like lava.",
+                image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&q=80&w=600",
+                status: "unavailable",
+                is_chef_recommended: false,
+                prep_time: "10m",
+                popularity: 40,
+                created_at: "2023-09-01"
+            },
+            {
+                id: 6,
+                name: "Ribeye Steak frites",
+                category: "Main Course",
+                price: 450000,
+                description: "Dry-aged Australian ribeye (300g) served with herb butter and classic fries.",
+                image: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&q=80&w=600",
+                status: "available",
+                is_chef_recommended: true,
+                prep_time: "25-30m",
+                popularity: 88,
+                created_at: "2023-08-01"
+            }
+        ];
+
+        const modifierGroups = {
+            1: [ // Burger
+                {
+                    id: "size",
+                    name: "Selection Size",
+                    required: true,
+                    max_select: 1,
+                    options: [
+                        { name: "Standard (Single)", price: 0 },
+                        { name: "Double Patty", price: 65000 },
+                        { name: "Triple Patty", price: 120000 }
+                    ]
+                },
+                {
+                    id: "extras",
+                    name: "Delicious Extras (Max 3)",
+                    required: false,
+                    max_select: 3,
+                    options: [
+                        { name: "Caramelized Onions", price: 10000 },
+                        { name: "Extra Cheese", price: 15000 },
+                        { name: "Crispy Bacon", price: 25000 },
+                        { name: "Fried Egg", price: 12000 }
+                    ]
+                }
+            ],
+            6: [ // Steak
+                {
+                    id: "doneness",
+                    name: "Steak Doneness",
+                    required: true,
+                    max_select: 1,
+                    options: [
+                        { name: "Rare", price: 0 },
+                        { name: "Medium Rare", price: 0 },
+                        { name: "Medium", price: 0 },
+                        { name: "Medium Well", price: 0 }
+                    ]
+                }
+            ]
+        };
+
+        // State
+        let currentCategory = "All";
+        let searchQuery = "";
+        let filters = { chef: false, available: false, under50: false, fast: false };
+        let sortBy = "popularity";
+        let cart = [];
+        let selectedItem = null;
+        let selectedModifiers = {};
+
+        // Format Price
+        function formatPrice(num) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num).replace('₫', 'đ');
+        }
+
+        // Initialize
+        function init() {
+            // Render Categories
+            const categoryList = document.getElementById('category-list');
+            const template = document.getElementById('category-template');
+            
+            menuCategories.forEach(cat => {
+                const clone = template.content.cloneNode(true);
+                const btn = clone.querySelector('button');
+                btn.textContent = cat;
+                if (cat === "All") btn.classList.add('tab-active');
+                btn.onclick = () => selectCategory(cat, btn);
+                categoryList.appendChild(clone);
+            });
+
+            // Search listener
+            document.getElementById('menu-search').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderMenu();
+            });
+
+            // Initial Render
+            renderMenu();
+
+            // Loading Simulation
+            setTimeout(() => {
+                document.getElementById('skeleton-loader').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('main-content').classList.remove('opacity-0');
+                }, 10);
+            }, 1500);
+        }
+
+        // Filtering Logic
+        function selectCategory(cat, el) {
+            currentCategory = cat;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
+            el.classList.add('tab-active');
+            renderMenu();
+        }
+
+        function toggleFilter(key) {
+            filters[key] = !filters[key];
+            const chip = document.querySelector(`[data-filter="${key}"]`);
+            if (filters[key]) {
+                chip.classList.add('chip-active');
+            } else {
+                chip.classList.remove('chip-active');
+            }
+            renderMenu();
+        }
+
+        function resetFilters() {
+            filters = { chef: false, available: false, under50: false, fast: false };
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('chip-active'));
+            searchQuery = "";
+            document.getElementById('menu-search').value = "";
+            renderMenu();
+        }
+
+        function handleSort(val) {
+            sortBy = val;
+            renderMenu();
+        }
+
+        // Render Menu
+        function renderMenu() {
+            const container = document.getElementById('menu-items');
+            let filtered = menuItems.filter(item => {
+                const matchesCat = currentCategory === "All" || item.category === currentCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.description.toLowerCase().includes(searchQuery);
+                const matchesChef = !filters.chef || item.is_chef_recommended;
+                const matchesAvailable = !filters.available || item.status === 'available';
+                const matchesUnder50 = !filters.under50 || item.price < 50000;
+                const matchesFast = !filters.fast || parseInt(item.prep_time) <= 15;
+                
+                return matchesCat && matchesSearch && matchesChef && matchesAvailable && matchesUnder50 && matchesFast;
+            });
+
+            // Sort
+            if (sortBy === 'popularity') filtered.sort((a, b) => b.popularity - a.popularity);
+            if (sortBy === 'price_asc') filtered.sort((a, b) => a.price - b.price);
+            if (sortBy === 'newest') filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            container.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+            } else {
+                document.getElementById('empty-state').classList.add('hidden');
+                filtered.forEach(item => {
+                    const isSoldOut = item.status === 'sold_out';
+                    const isUnavailable = item.status === 'unavailable';
+                    const isDisabled = isSoldOut || isUnavailable;
+
+                    const html = `
+                        <div onclick="openItemDetail(${item.id})" class="relative bg-white p-3 rounded-2xl shadow-sm border border-black/5 flex space-x-4 active:scale-[0.98] transition-all cursor-pointer ${isDisabled ? 'opacity-60' : ''}">
+                            <div class="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl">
+                                <img src="${item.image}" class="w-full h-full object-cover" alt="${item.name}">
+                                ${item.is_chef_recommended ? `
+                                    <div class="absolute top-1 left-1 bg-gold-500 text-white p-1 rounded-lg">
+                                        <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex-1 flex flex-col justify-between py-0.5">
+                                <div>
+                                    <h4 class="font-bold text-sm leading-tight">${item.name}</h4>
+                                    <p class="text-[10px] text-premium-gray line-clamp-1 mt-1">${item.description}</p>
+                                    <div class="flex items-center space-x-2 mt-2">
+                                        <span class="text-xs font-bold text-gold-600">${formatPrice(item.price)}</span>
+                                        <span class="text-[10px] text-premium-gray">• ${item.prep_time}</span>
+                                    </div>
+                                </div>
+                                <div class="flex mt-1">
+                                    ${isSoldOut ? `<span class="bg-red-100 text-red-600 text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase">Sold Out</span>` : ''}
+                                    ${isUnavailable ? `<span class="bg-gray-100 text-gray-600 text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase">Unavailable</span>` : ''}
+                                    ${!isDisabled && item.is_chef_recommended ? `<span class="bg-gold-100 text-gold-600 text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">Chef's Pick</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center justify-center">
+                                <button ${isDisabled ? 'disabled' : ''} 
+                                    onclick="event.stopPropagation(); openItemDetail(${item.id})" 
+                                    class="w-8 h-8 rounded-full bg-premium-black text-white flex items-center justify-center shadow-md active:translate-y-0.5 disabled:bg-gray-200 disabled:text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            }
+        }
+
+        // Sheet Logic
+        function toggleBottomSheet(id) {
+            const sheet = document.getElementById(id);
+            const isVisible = sheet.classList.contains('visible-state');
+            if (isVisible) closeBottomSheet(id);
+            else openBottomSheet(id);
+        }
+
+        function openBottomSheet(id) {
+            closeAllSheets(false);
+            const sheet = document.getElementById(id);
+            const backdrop = document.getElementById('backdrop');
+            sheet.classList.remove('hidden-state');
+            sheet.classList.add('visible-state');
+            backdrop.classList.remove('hidden');
+            setTimeout(() => backdrop.classList.add('opacity-100'), 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBottomSheet(id) {
+            const sheet = document.getElementById(id);
+            const backdrop = document.getElementById('backdrop');
+            sheet.classList.remove('visible-state');
+            sheet.classList.add('hidden-state');
+            
+            // Check if any other sheet is visible
+            const anyOther = Array.from(document.querySelectorAll('.bottom-sheet')).some(s => s.classList.contains('visible-state'));
+            if (!anyOther) {
+                backdrop.classList.remove('opacity-100');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function closeAllSheets(hideBackdrop = true) {
+            document.querySelectorAll('.bottom-sheet').forEach(sheet => {
+                sheet.classList.remove('visible-state');
+                sheet.classList.add('hidden-state');
+            });
+            if (hideBackdrop) {
+                const backdrop = document.getElementById('backdrop');
+                backdrop.classList.remove('opacity-100');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Item Detail & Modifiers
+        function openItemDetail(id) {
+            const item = menuItems.find(i => i.id === id);
+            if (item.status !== 'available') return;
+            
+            selectedItem = item;
+            selectedModifiers = {};
+            
+            const content = document.getElementById('detail-content');
+            const groups = modifierGroups[id] || [];
+            
+            let groupsHtml = groups.map(group => {
+                selectedModifiers[group.id] = group.max_select === 1 ? [] : [];
+                return `
+                    <div class="mt-6 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-sm uppercase tracking-wide text-premium-gray opacity-80">${group.name}</h4>
+                            <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded font-bold">${group.required ? 'REQUIRED' : 'OPTIONAL'}</span>
+                        </div>
+                        <div class="space-y-2">
+                            ${group.options.map((opt, idx) => `
+                                <label class="flex items-center justify-between p-4 border border-gray-100 rounded-2xl cursor-pointer has-[:checked]:bg-gold-50/50 has-[:checked]:border-gold-500 transition-all">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium">${opt.name}</span>
+                                        ${opt.price > 0 ? `<span class="text-xs text-gold-600">+ ${formatPrice(opt.price)}</span>` : ''}
+                                    </div>
+                                    <input type="${group.max_select === 1 ? 'radio' : 'checkbox'}" 
+                                           name="mod-${group.id}" 
+                                           value="${idx}"
+                                           onchange="updateModifierSelection('${group.id}', ${idx}, this)"
+                                           class="w-5 h-5 accent-premium-black">
+                                </label>
+                            `).join('')}
+                        </div>
+                        ${group.max_select > 1 ? `<p id="msg-${group.id}" class="text-[10px] text-red-500 hidden">You can only select up to ${group.max_select} items.</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            content.innerHTML = `
+                <div class="relative w-full aspect-[4/3] rounded-3xl overflow-hidden mb-6">
+                    <img src="${item.image}" class="w-full h-full object-cover">
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-start">
+                        <h2 class="text-2xl font-bold">${item.name}</h2>
+                        <span class="text-xl font-bold text-gold-600">${formatPrice(item.price)}</span>
+                    </div>
+                    <p class="text-sm text-premium-gray">${item.description}</p>
+                    <div class="flex items-center space-x-4 pt-2">
+                        <div class="flex items-center text-xs text-premium-gray font-medium">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            ${item.prep_time}
+                        </div>
+                        <div class="flex items-center text-xs text-premium-gray font-medium">
+                            <svg class="w-3.5 h-3.5 mr-1 text-gold-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            ${item.popularity}% Popularity
+                        </div>
+                    </div>
+                </div>
+                ${groupsHtml}
+            `;
+
+            updateDetailTotal();
+            openBottomSheet('detail-sheet');
+        }
+
+        function updateModifierSelection(groupId, optionIdx, el) {
+            const group = modifierGroups[selectedItem.id].find(g => g.id === groupId);
+            
+            if (group.max_select === 1) {
+                selectedModifiers[groupId] = [optionIdx];
+            } else {
+                if (el.checked) {
+                    if (selectedModifiers[groupId].length >= group.max_select) {
+                        el.checked = false;
+                        const msg = document.getElementById(`msg-${groupId}`);
+                        msg.classList.remove('hidden');
+                        setTimeout(() => msg.classList.add('hidden'), 2000);
+                        return;
+                    }
+                    selectedModifiers[groupId].push(optionIdx);
+                } else {
+                    selectedModifiers[groupId] = selectedModifiers[groupId].filter(idx => idx !== optionIdx);
+                }
+            }
+            updateDetailTotal();
+        }
+
+        function updateDetailTotal() {
+            let total = selectedItem.price;
+            const groups = modifierGroups[selectedItem.id] || [];
+            
+            let allRequiredFilled = true;
+
+            groups.forEach(group => {
+                const selections = selectedModifiers[group.id] || [];
+                if (group.required && selections.length === 0) {
+                    allRequiredFilled = false;
+                }
+                selections.forEach(idx => {
+                    total += group.options[idx].price;
+                });
+            });
+
+            document.getElementById('detail-total').textContent = formatPrice(total);
+            document.getElementById('add-to-cart-btn').disabled = !allRequiredFilled;
+        }
+
+        function addToCartFromDetail() {
+            const groups = modifierGroups[selectedItem.id] || [];
+            const mods = [];
+            let modsPrice = 0;
+
+            groups.forEach(group => {
+                const selections = selectedModifiers[group.id] || [];
+                selections.forEach(idx => {
+                    const opt = group.options[idx];
+                    mods.push({ name: opt.name, price: opt.price });
+                    modsPrice += opt.price;
+                });
+            });
+
+            const cartItem = {
+                uid: Date.now(),
+                id: selectedItem.id,
+                name: selectedItem.name,
+                basePrice: selectedItem.price,
+                totalPrice: selectedItem.price + modsPrice,
+                modifiers: mods,
+                quantity: 1
+            };
+
+            cart.push(cartItem);
+            showToast(`Added ${selectedItem.name} to tray`);
+            updateCartUI();
+            closeBottomSheet('detail-sheet');
+        }
+
+        // Cart Functions
+        function updateCartUI() {
+            const cartCountEls = document.querySelectorAll('#cart-count');
+            const cartTotalEls = document.querySelectorAll('#cart-total');
+            const cartBar = document.getElementById('cart-bar');
+
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const subtotal = cart.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0);
+
+            cartCountEls.forEach(el => el.textContent = count);
+            cartTotalEls.forEach(el => el.textContent = formatPrice(subtotal));
+
+            if (count > 0) {
+                cartBar.classList.remove('translate-y-24');
+                cartBar.classList.add('translate-y-0');
+            } else {
+                cartBar.classList.remove('translate-y-0');
+                cartBar.classList.add('translate-y-24');
+            }
+
+            // Sync Cart Sheet
+            renderCartItems();
+        }
+
+        function renderCartItems() {
+            const list = document.getElementById('cart-items-list');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const taxEl = document.getElementById('cart-tax');
+            const grandTotalEl = document.getElementById('cart-grand-total');
+            const summaryText = document.getElementById('cart-summary-text');
+
+            if (cart.length === 0) {
+                list.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-10 opacity-40">
+                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        <p class="font-bold">Your tray is empty</p>
+                    </div>
+                `;
+                subtotalEl.textContent = "0đ";
+                taxEl.textContent = "0đ";
+                grandTotalEl.textContent = "0đ";
+                summaryText.textContent = "0 items added";
+                return;
+            }
+
+            let subtotal = 0;
+            list.innerHTML = '';
+            
+            cart.forEach(item => {
+                subtotal += (item.totalPrice * item.quantity);
+                const html = `
+                    <div class="bg-gray-50 p-4 rounded-2xl flex items-start space-x-4">
+                        <div class="flex-1">
+                            <h5 class="font-bold text-sm">${item.name}</h5>
+                            ${item.modifiers.length > 0 ? `<p class="text-[10px] text-gray-500">${item.modifiers.map(m => m.name).join(', ')}</p>` : ''}
+                            <p class="text-xs font-bold text-gold-600 mt-2">${formatPrice(item.totalPrice)}</p>
+                        </div>
+                        <div class="flex flex-col items-end space-y-3">
+                            <div class="flex items-center bg-white border border-gray-200 rounded-full px-2 py-1 space-x-3">
+                                <button onclick="updateQty(${item.uid}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-black">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/></svg>
+                                </button>
+                                <span class="text-xs font-bold w-4 text-center">${item.quantity}</span>
+                                <button onclick="updateQty(${item.uid}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-black">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                            <button onclick="removeFromCart(${item.uid})" class="text-[10px] font-bold text-red-400 uppercase tracking-tighter">Remove</button>
+                        </div>
+                    </div>
+                `;
+                list.insertAdjacentHTML('beforeend', html);
+            });
+
+            const tax = subtotal * 0.1;
+            subtotalEl.textContent = formatPrice(subtotal);
+            taxEl.textContent = formatPrice(tax);
+            grandTotalEl.textContent = formatPrice(subtotal + tax);
+            summaryText.textContent = `${cart.length} dish${cart.length > 1 ? 'es' : ''} added`;
+        }
+
+        function updateQty(uid, delta) {
+            const item = cart.find(i => i.uid === uid);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) {
+                    removeFromCart(uid);
+                } else {
+                    updateCartUI();
+                }
+            }
+        }
+
+        function removeFromCart(uid) {
+            const item = cart.find(i => i.uid === uid);
+            cart = cart.filter(i => i.uid !== uid);
+            showToast(`Removed ${item.name}`);
+            updateCartUI();
+        }
+
+        // Toasts
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-premium-black text-white px-5 py-3 rounded-full text-xs font-bold shadow-2xl animate-slide-up flex items-center space-x-2';
+            toast.innerHTML = `
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                <span>${msg}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        function checkoutDemo() {
+            alert("This is a demo! Your order will be sent to the kitchen shortly.");
+            cart = [];
+            updateCartUI();
+            closeBottomSheet('cart-sheet');
+        }
+
+        // Run
+        init();
+    </script>
+</body>
+</html>

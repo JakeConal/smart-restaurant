@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Modal, Button } from '@/components/ui';
-import { Download, QrCode as QrCodeIcon } from 'lucide-react';
-import type { Table } from '@/types/table';
-import { qrApi, downloadFile } from '@/lib/api';
+import React, { useState } from "react";
+import { Modal, Button, useToast } from "@/components/ui";
+import { Download, QrCode as QrCodeIcon } from "lucide-react";
+import type { Table } from "@/types/table";
+import { qrApi, downloadFile } from "@/lib/api";
 
 export interface QRCodeModalProps {
   isOpen: boolean;
@@ -13,39 +13,45 @@ export interface QRCodeModalProps {
   onRegenerate?: () => void;
 }
 
-export const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, table, onRegenerate }) => {
-  const [downloading, setDownloading] = useState<'png' | 'pdf' | null>(null);
+export const QRCodeModal: React.FC<QRCodeModalProps> = ({
+  isOpen,
+  onClose,
+  table,
+  onRegenerate,
+}) => {
+  const toast = useToast();
+  const [downloading, setDownloading] = useState<"png" | "pdf" | null>(null);
   const [regenerating, setRegenerating] = useState(false);
 
   const qrCodeUrl = table.qrToken
     ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
-        `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/menu?table=${table.id}&token=${
+        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/menu?table=${table.id}&token=${
           table.qrToken
-        }`
+        }`,
       )}`
-    : '';
+    : "";
 
   const handleDownloadPNG = async () => {
-    setDownloading('png');
+    setDownloading("png");
     try {
       const blob = await qrApi.downloadPNG(table.id);
       downloadFile(blob, `table-${table.tableNumber}-qr.png`);
     } catch (error) {
-      console.error('Failed to download PNG:', error);
-      alert('Failed to download QR code');
+      console.error("Failed to download PNG:", error);
+      toast.error("Failed to download QR code");
     } finally {
       setDownloading(null);
     }
   };
 
   const handleDownloadPDF = async () => {
-    setDownloading('pdf');
+    setDownloading("pdf");
     try {
       const blob = await qrApi.downloadPDF(table.id);
       downloadFile(blob, `table-${table.tableNumber}-qr.pdf`);
     } catch (error) {
-      console.error('Failed to download PDF:', error);
-      alert('Failed to download QR code');
+      console.error("Failed to download PDF:", error);
+      toast.error("Failed to download QR code");
     } finally {
       setDownloading(null);
     }
@@ -53,7 +59,12 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, table
 
   const handleRegenerate = async () => {
     const isNew = !table.qrToken;
-    if (!isNew && !confirm('Are you sure you want to regenerate this QR code? The old code will become invalid.')) {
+    if (
+      !isNew &&
+      !confirm(
+        "Are you sure you want to regenerate this QR code? The old code will become invalid.",
+      )
+    ) {
       return;
     }
 
@@ -62,11 +73,11 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, table
       await qrApi.regenerate(table.id);
       onRegenerate?.();
       if (!isNew) {
-        alert('QR code regenerated successfully!');
+        toast.success("QR code regenerated successfully!");
       }
     } catch (error) {
-      console.error('Failed to generate QR code:', error);
-      alert(`Failed to ${isNew ? 'generate' : 'regenerate'} QR code`);
+      console.error("Failed to generate QR code:", error);
+      toast.error(`Failed to ${isNew ? "generate" : "regenerate"} QR code`);
     } finally {
       setRegenerating(false);
     }

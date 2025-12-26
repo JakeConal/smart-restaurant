@@ -8,7 +8,7 @@ import {
   TableFormModal,
   QRCodeModal,
 } from "@/components/tables";
-import { Button } from "@/components/ui";
+import { Button, useToast } from "@/components/ui";
 import { Download, RefreshCw } from "lucide-react";
 import type {
   Table,
@@ -19,6 +19,7 @@ import type {
 import { tableApi, qrApi, downloadFile } from "@/lib/api";
 
 export default function TablesPage() {
+  const toast = useToast();
   const [tables, setTables] = useState<Table[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<TableFilters>({});
@@ -45,7 +46,7 @@ export default function TablesPage() {
       setTables(data);
     } catch (error) {
       console.error("Failed to load tables:", error);
-      alert("Failed to load tables");
+      toast.error("Failed to load tables");
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ export default function TablesPage() {
       await loadTables();
     } catch (error) {
       console.error("Failed to update status:", error);
-      alert("Failed to update table status");
+      toast.error("Failed to update table status");
     }
   };
 
@@ -118,7 +119,7 @@ export default function TablesPage() {
       await loadTables();
     } catch (error) {
       console.error("Failed to delete table:", error);
-      alert("Failed to delete table");
+      toast.error("Failed to delete table");
     }
   };
 
@@ -129,7 +130,7 @@ export default function TablesPage() {
       downloadFile(blob, "all-tables-qr.pdf");
     } catch (error) {
       console.error("Failed to download all QR codes:", error);
-      alert("Failed to download QR codes");
+      toast.error("Failed to download QR codes");
     }
   };
 
@@ -139,7 +140,7 @@ export default function TablesPage() {
       downloadFile(blob, "all-tables-qr.zip");
     } catch (error) {
       console.error("Failed to download all QR codes:", error);
-      alert("Failed to download QR codes");
+      toast.error("Failed to download QR codes");
     }
   };
 
@@ -156,10 +157,10 @@ export default function TablesPage() {
     try {
       const result = await qrApi.regenerateAll();
       await loadTables();
-      alert(`Successfully regenerated ${result.count} QR codes!`);
+      toast.success(`Successfully regenerated ${result.count} QR codes!`);
     } catch (error) {
       console.error("Failed to regenerate QR codes:", error);
-      alert("Failed to regenerate QR codes");
+      toast.error("Failed to regenerate QR codes");
     }
   };
 

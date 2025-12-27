@@ -6,16 +6,15 @@ import PDFDocument from 'pdfkit';
 @Injectable()
 export class QrService {
   private readonly jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-  private readonly baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-  private readonly restaurantId = process.env.RESTAURANT_ID || 'default-restaurant';
+  private readonly baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
 
   /**
    * Generate a signed JWT token for a table
    */
-  generateToken(tableId: string, expiresIn?: string | number): string {
+  generateToken(tableId: string, restaurantId: string, expiresIn?: string | number): string {
     const payload = {
       tableId,
-      restaurantId: this.restaurantId,
+      restaurantId,
       timestamp: new Date().toISOString(),
     };
 
@@ -48,7 +47,7 @@ export class QrService {
    * Generate QR code URL for a table
    */
   generateQrUrl(tableId: string, token: string): string {
-    return `${this.baseUrl}/menu?table=${tableId}&token=${token}`;
+    return `${this.baseUrl}/customer/menu?tableId=${tableId}&token=${token}`;
   }
 
   /**

@@ -14,8 +14,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Skip auth check for login page and guest menu
-    if (pathname === "/login" || pathname === "/menu") {
+    // Skip auth check for login pages and customer routes
+    if (pathname === "/admin/login" || pathname.startsWith("/customer")) {
       setIsChecking(false);
       return;
     }
@@ -24,7 +24,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     const isAuth = authApi.isAuthenticated();
     
     if (!isAuth) {
-      router.push("/login");
+      router.push("/admin/login");
     } else {
       setIsChecking(false);
     }

@@ -43,7 +43,7 @@ export class TableService {
 
     // Generate QR code automatically for new table
     try {
-      const token = this.qrService.generateToken(savedTable.id);
+      const token = this.qrService.generateToken(savedTable.id, restaurantId);
       savedTable.qrToken = token;
       savedTable.qrTokenCreatedAt = new Date();
       return await this.tableRepo.save(savedTable);
@@ -122,7 +122,7 @@ export class TableService {
     const table = await this.findOne(id);
 
     // Generate new token
-    const token = this.qrService.generateToken(table.id);
+    const token = this.qrService.generateToken(table.id, table.restaurantId);
     const qrUrl = this.qrService.generateQrUrl(table.id, token);
     const qrCodeDataUrl = await this.qrService.generateQrCodeDataUrl(qrUrl);
 
@@ -203,7 +203,7 @@ export class TableService {
 
     const updatedTables = await Promise.all(
       tables.map(async (table) => {
-        const token = this.qrService.generateToken(table.id);
+        const token = this.qrService.generateToken(table.id, table.restaurantId);
         table.qrToken = token;
         table.qrTokenCreatedAt = new Date();
         return this.tableRepo.save(table);

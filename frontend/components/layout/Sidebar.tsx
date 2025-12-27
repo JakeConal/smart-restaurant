@@ -7,10 +7,9 @@ import { LayoutGrid, Layers, Utensils, Users2, Settings2, ChefHat, LogOut } from
 import { authApi } from '@/lib/api';
 
 const menuItems = [
-  { icon: LayoutGrid, label: 'Overview', href: '/dashboard' },
-  { icon: Layers, label: 'Tables', href: '/tables' },
-  { icon: Utensils, label: 'Menu', href: '/menu' },
-  { icon: Users2, label: 'Staff', href: '/staff' },
+  { icon: LayoutGrid, label: 'Overview', href: '/admin/dashboard' },
+  { icon: Layers, label: 'Tables', href: '/admin/tables' },
+  { icon: Users2, label: 'Staff', href: '/admin/staff' },
 ];
 
 export const Sidebar: React.FC = () => {

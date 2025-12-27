@@ -4,11 +4,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
 
-export default function Home() {
+export default function AdminHome() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect based on auth status
+    // Redirect to tables if authenticated
     if (authApi.isAuthenticated()) {
       router.push("/admin/tables");
     } else {

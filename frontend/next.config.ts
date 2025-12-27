@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Allow dev requests from network IP
+  allowedDevOrigins: ['192.168.2.12'],
   images: {
     remotePatterns: [
       {

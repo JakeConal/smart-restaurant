@@ -21,19 +21,17 @@ import {
   showToast,
 } from '@/components/guest-menu';
 import type { MenuItem, SelectedModifierDetail } from '@/types/menu';
-import { MOCK_CATEGORIES, MOCK_ITEMS } from '@/lib/mock-data';
 
 export default function MenuPage() {
   const searchParams = useSearchParams();
-  const tableId = searchParams.get('tableId') || '';
+  const tableId = searchParams.get('tableId') || searchParams.get('table') || '';
   const token = searchParams.get('token') || '';
-  const isMock = searchParams.get('mock') === 'true' || (!tableId && !token);
 
   // Hooks
   const {
     table,
-    categories: apiCategories,
-    items: apiItems,
+    categories,
+    items,
     loading,
     error,
     searchQuery,
@@ -47,36 +45,6 @@ export default function MenuPage() {
     resetFilters,
     refetch,
   } = useGuestMenu({ tableId, token });
-
-  // Use mock data if requested or if no credentials provided
-  const categories = isMock ? MOCK_CATEGORIES : apiCategories;
-  
-  // Filter mock items if in mock mode
-  const items = isMock 
-    ? MOCK_ITEMS
-        .filter(item => {
-          const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory;
-          const matchesSearch = !searchQuery || 
-            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-          
-          // Apply quick filters for mock data
-          if (quickFilters.chef && !item.isChefRecommended) return false;
-          if (quickFilters.available && item.status !== 'available') return false;
-          if (quickFilters.under50 && item.price > 50000) return false; // Just for demo
-          if (quickFilters.fast && item.prepTimeMinutes > 15) return false;
-
-          return matchesCategory && matchesSearch;
-        })
-        .sort((a, b) => {
-          if (sortBy === 'price_asc') return a.price - b.price;
-          if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          return b.popularityScore - a.popularityScore; // popularity
-        })
-    : apiItems;
-
-  const displayLoading = isMock ? false : loading;
-  const displayError = isMock ? null : error;
 
   const {
     cart,
@@ -137,17 +105,17 @@ export default function MenuPage() {
   };
 
   // Loading state
-  if (displayLoading && !cartLoaded) {
+  if (loading && !cartLoaded) {
     return <Skeleton />;
   }
 
   // Error state
-  if (displayError && !isMock) {
-    return <ErrorState error={displayError} onRetry={handleRetry} />;
+  if (error) {
+    return <ErrorState error={error} onRetry={handleRetry} />;
   }
 
-  // Missing params (only if not in mock mode)
-  if (!isMock && (!tableId || !token)) {
+  // Missing params
+  if (!tableId || !token) {
     return (
       <ErrorState
         error="Invalid QR code. Please scan again or ask staff for assistance."
@@ -161,16 +129,9 @@ export default function MenuPage() {
       {/* Toast Container */}
       <ToastContainer />
 
-      {/* Demo Mode Badge */}
-      {isMock && (
-        <div className="bg-gold-500 text-white text-[10px] font-bold py-1 px-4 text-center uppercase tracking-widest z-[100] relative">
-          Demo Mode • Using Mock Data
-        </div>
-      )}
-
       {/* Header */}
       <MenuHeader
-        restaurantName={isMock ? "The Grand Bistro" : (table?.tableNumber ? `Table ${table.tableNumber}` : 'Restaurant')}
+        restaurantName={table?.tableNumber ? `Table ${table.tableNumber}` : 'Restaurant'}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onSortClick={() => openSheet('sort')}

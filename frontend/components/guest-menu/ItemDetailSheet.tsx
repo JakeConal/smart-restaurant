@@ -16,11 +16,12 @@ interface ItemDetailSheetProps {
 }
 
 const formatPrice = (price: number): string => {
+  const safePrice = Number(price) || 0;
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
   })
-    .format(price)
+    .format(safePrice)
     .replace('₫', 'đ');
 };
 
@@ -83,14 +84,14 @@ export const ItemDetailSheet = ({
 
   // Calculate total price
   const calculateTotal = (): number => {
-    let total = item.price;
+    let total = Number(item.price || 0);
 
     item.modifierGroups?.forEach((group) => {
       const selections = selectedModifiers[group.id] || [];
       selections.forEach((idx) => {
         const option = group.options[idx];
         if (option) {
-          total += option.priceAdjustment;
+          total += Number(option.priceAdjustment || 0);
         }
       });
     });

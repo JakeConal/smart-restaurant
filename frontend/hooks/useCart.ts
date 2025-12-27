@@ -102,7 +102,11 @@ export const useCart = (tableId: string) => {
 
   // Calculate subtotal
   const getSubtotal = useCallback(() => {
-    return cart.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0);
+    return cart.reduce((sum, item) => {
+      const price = Number(item.totalPrice || 0);
+      const qty = Number(item.quantity || 0);
+      return sum + (price * qty);
+    }, 0);
   }, [cart]);
 
   // Calculate tax (10%)
@@ -131,8 +135,8 @@ export const useCart = (tableId: string) => {
 
 // Helper function to calculate item price with modifiers
 const calculateItemPrice = (basePrice: number, modifiers: SelectedModifierDetail[]): number => {
-  const modifiersTotal = modifiers.reduce((sum, mod) => sum + mod.priceAdjustment, 0);
-  return basePrice + modifiersTotal;
+  const modifiersTotal = modifiers.reduce((sum, mod) => sum + Number(mod.priceAdjustment || 0), 0);
+  return Number(basePrice || 0) + modifiersTotal;
 };
 
 // Helper function to compare if two sets of modifiers are identical

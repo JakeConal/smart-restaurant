@@ -46,7 +46,7 @@ export default function MenuItemsPage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/admin/login");
+      router.push("/login");
     }
   }, [user, isLoading, router]);
 

@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  { icon: LayoutGrid, label: "Overview", href: "/admin" },
-  { icon: Layers, label: "Tables", href: "/admin/tables" },
-  { icon: Utensils, label: "Menu", href: "/admin/menu" },
-  { icon: Users2, label: "Staff", href: "/admin/staff" },
+  { icon: LayoutGrid, label: "Overview", href: "/" },
+  { icon: Layers, label: "Tables", href: "/tables" },
+  { icon: Utensils, label: "Menu", href: "/menu" },
+  { icon: Users2, label: "Staff", href: "/staff" },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -70,7 +70,7 @@ export const Sidebar: React.FC = () => {
         <div className="mt-auto"></div>
 
         <Link
-          href="/admin/settings"
+          href="/settings"
           className="flex items-center gap-4 px-4 py-3.5 text-gray-500 hover:text-slate-800 hover:bg-slate-50 rounded-2xl transition-all group"
         >
           <Settings2 className="w-6 h-6 group-hover:rotate-90 transition-transform" />

@@ -36,7 +36,7 @@ export default function MenuCategoriesPage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/admin/login");
+      router.push("/login");
     }
   }, [user, isLoading, router]);
 

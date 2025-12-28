@@ -13,7 +13,7 @@ export default function AdminHome() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/admin/login");
+      router.push("/login");
     }
   }, [user, isLoading, router]);
 
@@ -34,21 +34,21 @@ export default function AdminHome() {
       title: "Manage Tables",
       description: "Add, edit, and manage restaurant tables",
       icon: Layers,
-      href: "/admin/tables",
+      href: "/tables",
       color: "blue",
     },
     {
       title: "Menu Management",
       description: "Organize your menu, items, and categories",
       icon: Utensils,
-      href: "/admin/menu",
+      href: "/menu",
       color: "green",
     },
     {
       title: "Staff Management",
       description: "Manage restaurant staff and permissions",
       icon: Users2,
-      href: "/admin/staff",
+      href: "/staff",
       color: "purple",
     },
   ];

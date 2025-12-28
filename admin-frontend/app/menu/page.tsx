@@ -13,7 +13,7 @@ export default function MenuPage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/admin/login");
+      router.push("/login");
     }
   }, [user, isLoading, router]);
 
@@ -34,21 +34,21 @@ export default function MenuPage() {
       title: "Menu Categories",
       description: "Organize your menu into categories",
       icon: Grid3x3,
-      href: "/admin/menu/categories",
+      href: "/menu/categories",
       color: "purple",
     },
     {
       title: "Menu Items",
       description: "Add and manage menu items, photos, and pricing",
       icon: UtensilsCrossed,
-      href: "/admin/menu/items",
+      href: "/menu/items",
       color: "blue",
     },
     {
       title: "Modifier Groups",
       description: "Create customization options (size, toppings, etc.)",
       icon: Settings2,
-      href: "/admin/menu/modifiers",
+      href: "/menu/modifiers",
       color: "green",
     },
   ];

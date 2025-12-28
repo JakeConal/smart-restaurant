@@ -213,6 +213,34 @@ export class MenuItemService {
     };
   }
 
+  async updateStatus(
+    id: string,
+    restaurantId: string,
+    status: 'available' | 'unavailable' | 'sold_out',
+  ) {
+    const item = await this.itemRepo.findOne({
+      where: { id, restaurantId, isDeleted: false },
+    });
+
+    if (!item) {
+      throw new NotFoundException('Menu item not found');
+    }
+
+    item.status = status as any; // Type assertion since enum values match
+    const savedItem = await this.itemRepo.save(item);
+
+    // Load the category relation for the response
+    const itemWithCategory = await this.itemRepo.findOne({
+      where: { id: savedItem.id },
+      relations: ['category'],
+    });
+
+    return {
+      ...itemWithCategory,
+      categoryName: itemWithCategory?.category?.name,
+    };
+  }
+
   async remove(id: string, restaurantId: string) {
     const item = await this.itemRepo.findOne({
       where: { id, restaurantId },

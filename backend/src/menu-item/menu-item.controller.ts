@@ -4,6 +4,7 @@ import {
   Post,
   Put,
   Delete,
+  Patch,
   Body,
   Param,
   Query,
@@ -62,6 +63,15 @@ export class MenuItemController {
     @Body() dto: UpdateMenuItemDto,
   ) {
     return this.service.update(id, user.restaurantId, dto);
+  }
+
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() body: { status: 'available' | 'unavailable' | 'sold_out' },
+  ) {
+    return this.service.updateStatus(id, user.restaurantId, body.status);
   }
 
   @Delete(':id')

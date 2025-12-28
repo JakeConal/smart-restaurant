@@ -20,10 +20,10 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         await login({ email, password });
-        router.push("/admin");
+        router.push("/");
       } else {
         await signup({ email, password, restaurantName });
-        router.push("/admin");
+        router.push("/");
       }
     } catch {
       // Error is handled in AuthContext

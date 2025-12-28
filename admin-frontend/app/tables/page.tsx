@@ -37,7 +37,7 @@ export default function TablesPage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/admin/login");
+      router.push("/login");
     } else if (!isLoading && user) {
       loadTables();
     }

@@ -7,7 +7,10 @@ import PDFDocument from 'pdfkit';
 export class QrService {
   private readonly jwtSecret =
     process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-  private readonly baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  private readonly baseUrl =
+    process.env.CUSTOMER_FRONTEND_URL ||
+    process.env.BASE_URL ||
+    'http://localhost:4000';
 
   /**
    * Generate a signed JWT token for a table

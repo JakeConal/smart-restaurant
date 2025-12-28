@@ -3,7 +3,8 @@
   "packageManager": "yarn@4.12.0",
   "workspaces": [
     "backend",
-    "frontend"
+    "customer-frontend",
+    "admin-frontend"
   ],
   "scripts": {
     "build": "yarn workspace backend build",

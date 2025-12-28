@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 // Helper function to get auth token
 const getAuthToken = () => {
@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
       if (typeof window !== "undefined") {
         localStorage.removeItem("authToken");
         localStorage.removeItem("authUser");
-        window.location.href = "/login";
+        window.location.href = "/admin/login";
       }
     } else if (error.response?.status === 403) {
       // Forbidden - user doesn't have permission

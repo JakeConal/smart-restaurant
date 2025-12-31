@@ -154,7 +154,7 @@ export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-gray-400" />
                     <span className="text-xl font-bold text-gray-900">
-                      ${Number(displayItem.price).toFixed(2)}
+                      {Number(displayItem.price).toFixed(2)}
                     </span>
                   </div>
                   {displayItem.prepTimeMinutes && (

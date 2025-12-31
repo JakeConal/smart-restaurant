@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Button, Input, Modal, Select } from "@/shared/components/ui";
 import { menuApi } from "@/shared/lib/api/menu";
 import type { MenuItemPhoto } from "@/shared/types/menu";
 import {
   ArrowLeft,
-  ShoppingCart,
   User,
   ChefHat,
   Menu,
@@ -15,8 +14,6 @@ import {
   Star,
   Plus,
   Minus,
-  List,
-  ClipboardList,
   UtensilsCrossed,
   ChevronLeft,
   ChevronRight,
@@ -73,6 +70,7 @@ interface MenuData {
 function RestaurantMenuPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const restaurantId = params.restaurantId as string;
   const tableId = searchParams.get("table");
   const token = searchParams.get("token");
@@ -382,8 +380,9 @@ function RestaurantMenuPageContent() {
               variant="ghost"
               size="sm"
               className="text-white hover:bg-orange-600 p-2"
+              onClick={() => router.push("/profile")}
             >
-              <Menu className="w-5 h-5" />
+              <User className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-bold">Smart Restaurant</h1>
           </div>
@@ -786,56 +785,6 @@ function RestaurantMenuPageContent() {
           </div>
         )}
       </Modal>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
-        <div className="flex items-center justify-around">
-          <button
-            onClick={() => setActiveTab("menu")}
-            className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
-              activeTab === "menu" ? "text-orange-500" : "text-gray-500"
-            }`}
-          >
-            <List className="w-5 h-5" />
-            <span className="text-xs font-medium">Menu</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("cart")}
-            className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors relative ${
-              activeTab === "cart" ? "text-orange-500" : "text-gray-500"
-            }`}
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                {cartCount}
-              </span>
-            )}
-            <span className="text-xs font-medium">Cart</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("orders")}
-            className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
-              activeTab === "orders" ? "text-orange-500" : "text-gray-500"
-            }`}
-          >
-            <ClipboardList className="w-5 h-5" />
-            <span className="text-xs font-medium">Orders</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
-              activeTab === "profile" ? "text-orange-500" : "text-gray-500"
-            }`}
-          >
-            <User className="w-5 h-5" />
-            <span className="text-xs font-medium">Profile</span>
-          </button>
-        </div>
-      </nav>
     </div>
   );
 }

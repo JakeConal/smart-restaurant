@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
       if (typeof window !== "undefined") {
         localStorage.removeItem("authToken");
         localStorage.removeItem("authUser");
-        window.location.href = "/admin/login";
+        window.location.href = "/login";
       }
     } else if (error.response?.status === 403) {
       // Forbidden - user doesn't have permission

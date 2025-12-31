@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button, Input, useToast } from "@/shared/components/ui";
 import { Eye, EyeOff, CheckCircle, UtensilsCrossed } from "lucide-react";
+import { authApi, apiClient } from "@/shared/lib/api";
 
 function MenuPageContent() {
   const searchParams = useSearchParams();
@@ -53,15 +54,37 @@ function MenuPageContent() {
     }
   }, [searchParams, router]);
 
+  useEffect(() => {
+    const authToken = searchParams.get("auth_token");
+    const authUser = searchParams.get("auth_user");
+
+    if (authToken && authUser) {
+      try {
+        const user = JSON.parse(decodeURIComponent(authUser));
+        localStorage.setItem("authToken", authToken);
+        localStorage.setItem("authUser", JSON.stringify(user));
+        toast.success("Login successful!");
+
+        // Redirect to restaurant
+        if (restaurantId && tableId) {
+          router.push(
+            `/restaurant/${restaurantId}?table=${tableId}&token=${searchParams.get("token")}`,
+          );
+        }
+      } catch (error) {
+        toast.error("Failed to process login");
+      }
+    }
+  }, [searchParams, restaurantId, tableId, router, toast]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // TODO: Implement customer login
-      console.log("Customer login:", { email, password });
-
-      // For now, simulate successful login
+      const response = await authApi.customerLogin({ email, password });
+      localStorage.setItem("authToken", response.access_token);
+      localStorage.setItem("authUser", JSON.stringify(response.user));
       toast.success("Login successful!");
 
       // Redirect to restaurant menu
@@ -71,7 +94,7 @@ function MenuPageContent() {
         );
       }
     } catch (error) {
-      toast.error("Login failed");
+      toast.error("Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -85,8 +108,12 @@ function MenuPageContent() {
   };
 
   const handleGoogleLogin = () => {
-    // TODO: Implement Google login
-    toast.info("Google login coming soon!");
+    const params = new URLSearchParams();
+    params.set("redirect", "menu");
+    if (tableId) params.set("table", tableId);
+    const token = searchParams.get("token");
+    if (token) params.set("token", token);
+    window.location.href = `${apiClient.defaults.baseURL}/auth/customer/google?${params.toString()}`;
   };
 
   return (

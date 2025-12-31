@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { CustomerGoogleStrategy } from './strategies/customer-google.strategy';
 import { JwtAuthGuard } from './guards/jwt.guards';
 import { AdminGuard } from './guards/admin.guards';
 import { Users } from '../schema/user.schema';
@@ -23,6 +24,7 @@ import { Users } from '../schema/user.schema';
     AuthService,
     JwtStrategy,
     GoogleStrategy,
+    CustomerGoogleStrategy,
     JwtAuthGuard,
     AdminGuard,
   ],

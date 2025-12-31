@@ -11,13 +11,13 @@ export class Users {
   @Column({ nullable: true })
   password: string;
 
-  @Column()
+  @Column({ nullable: true })
   restaurantId: string;
 
   @Column({ default: 'admin' })
   role: string;
 
-  @Column()
+  @Column({ nullable: true })
   restaurantName: string;
 
   @Column({ nullable: true })

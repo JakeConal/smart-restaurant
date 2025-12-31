@@ -6,6 +6,8 @@ import * as bcrypt from 'bcrypt';
 import { Users } from '../schema/user.schema';
 import { SignupDto } from '../dto/sign-up.dto';
 import { LoginDto } from '../dto/login.dto';
+import { CustomerSignupDto } from '../dto/customer-sign-up.dto';
+import { CustomerLoginDto } from '../dto/customer-login.dto';
 
 @Injectable()
 export class AuthService {
@@ -119,6 +121,97 @@ export class AuthService {
         email: existingUser.email,
         role: existingUser.role,
         restaurantId: existingUser.restaurantId,
+        firstName: existingUser.firstName,
+        lastName: existingUser.lastName,
+      },
+    };
+  }
+
+  async customerSignup(dto: CustomerSignupDto) {
+    const exists = await this.userRepo.findOne({ where: { email: dto.email } });
+    if (exists) throw new BadRequestException('Email already exists');
+
+    const hashed = await bcrypt.hash(dto.password, 10);
+    const user = this.userRepo.create({
+      email: dto.email,
+      password: hashed,
+      role: 'customer',
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+    });
+    await this.userRepo.save(user);
+
+    const token = await this.jwt.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return {
+      access_token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
+  }
+
+  async customerLogin(dto: CustomerLoginDto) {
+    const user = await this.userRepo.findOne({ where: { email: dto.email } });
+    if (!user || user.role !== 'customer')
+      throw new BadRequestException('Invalid credentials');
+
+    const validPwd = await bcrypt.compare(dto.password, user.password);
+    if (!validPwd) throw new BadRequestException('Invalid credentials');
+
+    const token = await this.jwt.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return {
+      access_token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
+  }
+
+  async customerGoogleLogin(user: any) {
+    const { email, firstName, lastName } = user;
+    let existingUser = await this.userRepo.findOne({ where: { email } });
+
+    if (!existingUser) {
+      existingUser = this.userRepo.create({
+        email,
+        password: '', // No password for Google users
+        role: 'customer',
+        firstName,
+        lastName,
+      });
+      await this.userRepo.save(existingUser);
+    }
+
+    const token = await this.jwt.signAsync({
+      sub: existingUser.id,
+      email: existingUser.email,
+      role: existingUser.role,
+    });
+
+    return {
+      access_token: token,
+      user: {
+        id: existingUser.id,
+        email: existingUser.email,
+        role: existingUser.role,
         firstName: existingUser.firstName,
         lastName: existingUser.lastName,
       },

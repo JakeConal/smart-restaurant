@@ -8,7 +8,8 @@ export interface LoginRequest {
 export interface SignupRequest {
   email: string;
   password: string;
-  restaurantName: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface AuthResponse {
@@ -17,19 +18,24 @@ export interface AuthResponse {
     id: string;
     email: string;
     role: string;
-    restaurantId: string;
+    firstName?: string;
+    lastName?: string;
   };
 }
 
 export class AuthApi {
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await apiClient.post("/auth/login", data);
+    const response = await apiClient.post("/auth/customer/login", data);
     return response.data;
   }
 
   async signup(data: SignupRequest): Promise<AuthResponse> {
-    const response = await apiClient.post("/auth/signup", data);
+    const response = await apiClient.post("/auth/customer/signup", data);
     return response.data;
+  }
+
+  async googleLogin(): Promise<void> {
+    window.location.href = `${apiClient.defaults.baseURL}/auth/customer/google`;
   }
 }
 

@@ -10,6 +10,8 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { SignupDto } from 'src/dto/sign-up.dto';
+import { CustomerLoginDto } from '../dto/customer-login.dto';
+import { CustomerSignupDto } from '../dto/customer-sign-up.dto';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
 
@@ -22,22 +24,50 @@ export class AuthController {
     return this.auth.signup(dto);
   }
 
-  @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  @Post('customer/signup')
+  customerSignup(@Body() dto: CustomerSignupDto) {
+    return this.auth.customerSignup(dto);
+  }
+
+  @Post('customer/login')
+  customerLogin(@Body() dto: CustomerLoginDto) {
+    return this.auth.customerLogin(dto);
   }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth(@Req() req) {}
 
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req, @Res() res: Response) {
-    const authResponse = await this.auth.googleLogin(req.user);
+  @Get('customer/google')
+  async customerGoogleAuth(@Req() req, @Res() res) {
+    const params = req.query;
+    const state = JSON.stringify(params);
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri =
+      process.env.GOOGLE_CUSTOMER_CALLBACK_URL ||
+      'http://localhost:3001/auth/customer/google/callback';
+    const scope = 'email profile';
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=code&state=${encodeURIComponent(state)}`;
+    res.redirect(authUrl);
+  }
+
+  @Get('customer/google/callback')
+  @UseGuards(AuthGuard('customer-google'))
+  async customerGoogleAuthRedirect(@Req() req, @Res() res: Response) {
+    const authResponse = await this.auth.customerGoogleLogin(req.user);
     const frontendUrl =
-      process.env.ADMIN_FRONTEND_URL || 'http://localhost:3000';
-    const redirectUrl = `${frontendUrl}/login?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
+      process.env.CUSTOMER_FRONTEND_URL || 'http://localhost:4000';
+    let redirectPath = 'login';
+    let extraParams = '';
+    if (req.query.state) {
+      const params = JSON.parse(decodeURIComponent(req.query.state));
+      if (params.redirect === 'menu') {
+        redirectPath = 'menu';
+        if (params.table) extraParams += `&table=${params.table}`;
+        if (params.token) extraParams += `&token=${params.token}`;
+      }
+    }
+    const redirectUrl = `${frontendUrl}/${redirectPath}?auth_token=${authResponse.access_token}&auth_user=${encodeURIComponent(JSON.stringify(authResponse.user))}${extraParams}`;
     res.redirect(redirectUrl);
   }
 }

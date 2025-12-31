@@ -10,10 +10,11 @@ import { CustomerGoogleStrategy } from './strategies/customer-google.strategy';
 import { JwtAuthGuard } from './guards/jwt.guards';
 import { AdminGuard } from './guards/admin.guards';
 import { Users } from '../schema/user.schema';
+import { Customer } from '../schema/customer.schema';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Users]),
+    TypeOrmModule.forFeature([Users, Customer]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secretKey123',

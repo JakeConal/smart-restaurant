@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Table } from './schema/table.schema';
 import { MenuCategory } from './schema/menu-category.schema';
 import { Users } from './schema/user.schema';
+import { Customer } from './schema/customer.schema';
 import { MenuItem } from './schema/menu-item.schema';
 import { MenuItemPhoto } from './schema/menu-item-photo.schema';
 import { MenuCategoryModule } from './menu-category/menu-category.module';
@@ -39,6 +40,7 @@ import { MenuItemModifierGroup } from './schema/menu-item-modifier.schema';
           Table,
           MenuCategory,
           Users,
+          Customer,
           MenuItem,
           MenuItemPhoto,
           ModifierGroup,

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Users } from '../schema/user.schema';
+import { Customer } from '../schema/customer.schema';
 import { SignupDto } from '../dto/sign-up.dto';
 import { LoginDto } from '../dto/login.dto';
 import { CustomerSignupDto } from '../dto/customer-sign-up.dto';
@@ -14,6 +15,8 @@ export class AuthService {
   constructor(
     @InjectRepository(Users)
     private userRepo: Repository<Users>,
+    @InjectRepository(Customer)
+    private customerRepo: Repository<Customer>,
     private jwt: JwtService,
   ) {}
   async signup(dto: SignupDto) {
@@ -128,92 +131,97 @@ export class AuthService {
   }
 
   async customerSignup(dto: CustomerSignupDto) {
-    const exists = await this.userRepo.findOne({ where: { email: dto.email } });
+    const exists = await this.customerRepo.findOne({
+      where: { email: dto.email },
+    });
     if (exists) throw new BadRequestException('Email already exists');
 
     const hashed = await bcrypt.hash(dto.password, 10);
-    const user = this.userRepo.create({
+    const customer = this.customerRepo.create({
       email: dto.email,
       password: hashed,
       role: 'customer',
       firstName: dto.firstName,
       lastName: dto.lastName,
     });
-    await this.userRepo.save(user);
+    await this.customerRepo.save(customer);
 
     const token = await this.jwt.signAsync({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
+      sub: customer.id,
+      email: customer.email,
+      role: customer.role,
     });
 
     return {
       access_token: token,
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        id: customer.id,
+        email: customer.email,
+        role: customer.role,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
       },
     };
   }
 
   async customerLogin(dto: CustomerLoginDto) {
-    const user = await this.userRepo.findOne({ where: { email: dto.email } });
-    if (!user || user.role !== 'customer')
-      throw new BadRequestException('Invalid credentials');
+    const customer = await this.customerRepo.findOne({
+      where: { email: dto.email },
+    });
+    if (!customer) throw new BadRequestException('Invalid credentials');
 
-    const validPwd = await bcrypt.compare(dto.password, user.password);
+    const validPwd = await bcrypt.compare(dto.password, customer.password);
     if (!validPwd) throw new BadRequestException('Invalid credentials');
 
     const token = await this.jwt.signAsync({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
+      sub: customer.id,
+      email: customer.email,
+      role: customer.role,
     });
 
     return {
       access_token: token,
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        id: customer.id,
+        email: customer.email,
+        role: customer.role,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
       },
     };
   }
 
   async customerGoogleLogin(user: any) {
     const { email, firstName, lastName } = user;
-    let existingUser = await this.userRepo.findOne({ where: { email } });
+    let existingCustomer = await this.customerRepo.findOne({
+      where: { email },
+    });
 
-    if (!existingUser) {
-      existingUser = this.userRepo.create({
+    if (!existingCustomer) {
+      existingCustomer = this.customerRepo.create({
         email,
         password: '', // No password for Google users
         role: 'customer',
         firstName,
         lastName,
       });
-      await this.userRepo.save(existingUser);
+      await this.customerRepo.save(existingCustomer);
     }
 
     const token = await this.jwt.signAsync({
-      sub: existingUser.id,
-      email: existingUser.email,
-      role: existingUser.role,
+      sub: existingCustomer.id,
+      email: existingCustomer.email,
+      role: existingCustomer.role,
     });
 
     return {
       access_token: token,
       user: {
-        id: existingUser.id,
-        email: existingUser.email,
-        role: existingUser.role,
-        firstName: existingUser.firstName,
-        lastName: existingUser.lastName,
+        id: existingCustomer.id,
+        email: existingCustomer.email,
+        role: existingCustomer.role,
+        firstName: existingCustomer.firstName,
+        lastName: existingCustomer.lastName,
       },
     };
   }

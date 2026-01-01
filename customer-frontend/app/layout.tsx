@@ -1,31 +1,31 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, League_Spartan } from "next/font/google";
-import { Suspense } from "react";
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { ToastProvider } from "@/shared/components/ui";
-import { AuthProvider } from "@/shared/components/auth/AuthContext";
-import { MenuProvider } from "@/shared/components/menu/MenuContext";
-import AppBottomNav from "@/shared/components/AppBottomNav";
+import { AppProvider } from "@/lib/context";
+import { CartProvider } from "@/lib/cart-context";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const leagueSpartan = League_Spartan({
-  variable: "--font-league-spartan",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Smart Restaurant - Order Food",
-  description: "Order food from your favorite restaurants",
+  title: "Smart Restaurant - Order & Dine",
+  description: "Browse menu, order food, and enjoy your dining experience",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Smart Restaurant",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#fa4a0c",
 };
 
 export default function RootLayout({
@@ -35,19 +35,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${leagueSpartan.variable} antialiased`}
-      >
-        <AuthProvider>
-          <MenuProvider>
-            <ToastProvider>
+      <body className={`${inter.variable} antialiased`}>
+        <AppProvider>
+          <CartProvider>
+            <div className="min-h-screen max-w-md mx-auto bg-[#f2f2f2] relative">
               {children}
-              <Suspense fallback={null}>
-                <AppBottomNav />
-              </Suspense>
-            </ToastProvider>
-          </MenuProvider>
-        </AuthProvider>
+            </div>
+          </CartProvider>
+        </AppProvider>
       </body>
     </html>
   );

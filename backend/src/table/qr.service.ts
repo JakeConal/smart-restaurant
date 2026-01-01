@@ -58,8 +58,8 @@ export class QrService {
   /**
    * Generate QR code URL for a table
    */
-  generateQrUrl(tableId: string, token: string): string {
-    return `${this.baseUrl}/login?table=${tableId}&token=${token}`;
+  generateQrUrl(token: string): string {
+    return `${this.baseUrl}/login?token=${token}`;
   }
 
   /**

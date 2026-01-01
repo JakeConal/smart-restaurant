@@ -134,7 +134,7 @@ export class TableService {
 
     // Generate new token
     const token = this.qrService.generateToken(table.id, table.restaurantId);
-    const qrUrl = this.qrService.generateQrUrl(table.id, token);
+    const qrUrl = this.qrService.generateQrUrl(token);
     const qrCodeDataUrl = await this.qrService.generateQrCodeDataUrl(qrUrl);
 
     // Update table with new token
@@ -165,7 +165,7 @@ export class TableService {
       throw new BadRequestException('QR code not generated for this table');
     }
 
-    const qrUrl = this.qrService.generateQrUrl(table.id, table.qrToken);
+    const qrUrl = this.qrService.generateQrUrl(table.qrToken);
     const dataUrl = await this.qrService.generateQrCodeDataUrl(qrUrl);
 
     return { dataUrl };
@@ -178,7 +178,7 @@ export class TableService {
       throw new BadRequestException('QR code not generated for this table');
     }
 
-    const qrUrl = this.qrService.generateQrUrl(table.id, table.qrToken);
+    const qrUrl = this.qrService.generateQrUrl(table.qrToken);
     return this.qrService.generateQrCodePng(qrUrl);
   }
 
@@ -189,7 +189,7 @@ export class TableService {
       throw new BadRequestException('QR code not generated for this table');
     }
 
-    const qrUrl = this.qrService.generateQrUrl(table.id, table.qrToken);
+    const qrUrl = this.qrService.generateQrUrl(table.qrToken);
     const qrCodeDataUrl = await this.qrService.generateQrCodeDataUrl(qrUrl);
 
     return this.qrService.generateQrCodePdf(table.tableNumber, qrCodeDataUrl);
@@ -208,7 +208,7 @@ export class TableService {
 
     const qrData = await Promise.all(
       tablesWithQr.map(async (table) => {
-        const qrUrl = this.qrService.generateQrUrl(table.id, table.qrToken);
+        const qrUrl = this.qrService.generateQrUrl(table.qrToken);
         const qrCodeDataUrl = await this.qrService.generateQrCodeDataUrl(qrUrl);
         return {
           tableNumber: table.tableNumber,
@@ -285,7 +285,7 @@ export class TableService {
 
     // Generate PNG for each table and add to archive
     for (const table of tablesWithQr) {
-      const qrUrl = this.qrService.generateQrUrl(table.id, table.qrToken);
+      const qrUrl = this.qrService.generateQrUrl(table.qrToken);
       const pngBuffer = await this.qrService.generateQrCodePng(qrUrl);
       archive.append(pngBuffer, { name: `table-${table.tableNumber}-qr.png` });
     }

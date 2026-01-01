@@ -17,7 +17,6 @@ export class MenuController {
 
   @Get()
   async verifyAndGetMenu(
-    @Query('table') tableId: string,
     @Query('token') token: string,
     @Query('q') q?: string,
     @Query('categoryId') categoryId?: string,
@@ -26,8 +25,8 @@ export class MenuController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    if (!tableId || !token) {
-      throw new BadRequestException('Table ID and token are required');
+    if (!token) {
+      throw new BadRequestException('Token is required');
     }
 
     const table = await this.tableService.verifyQrToken(token);

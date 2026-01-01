@@ -12,6 +12,15 @@ export interface SignupRequest {
   lastName: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   user: {
@@ -34,8 +43,29 @@ export class AuthApi {
     return response.data;
   }
 
-  async googleLogin(): Promise<void> {
-    window.location.href = `${apiClient.defaults.baseURL}/auth/customer/google`;
+  async googleLogin(queryParams?: URLSearchParams): Promise<void> {
+    const params = queryParams ? `?${queryParams.toString()}` : "";
+    window.location.href = `${apiClient.defaults.baseURL}/auth/customer/google${params}`;
+  }
+
+  async forgotPassword(
+    data: ForgotPasswordRequest,
+  ): Promise<{ message: string }> {
+    const response = await apiClient.post(
+      "/auth/customer/forgot-password",
+      data,
+    );
+    return response.data;
+  }
+
+  async resetPassword(
+    data: ResetPasswordRequest,
+  ): Promise<{ message: string }> {
+    const response = await apiClient.post(
+      "/auth/customer/reset-password",
+      data,
+    );
+    return response.data;
   }
 }
 

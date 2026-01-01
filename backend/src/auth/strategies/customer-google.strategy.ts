@@ -31,7 +31,7 @@ export class CustomerGoogleStrategy extends PassportStrategy(
       email: emails[0].value,
       firstName: name.givenName,
       lastName: name.familyName,
-      picture: photos[0].value,
+      profilePictureUrl: photos[0]?.value || null,
       accessToken,
     };
     done(null, user);

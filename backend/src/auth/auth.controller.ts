@@ -60,11 +60,18 @@ export class AuthController {
     let redirectPath = 'login';
     let extraParams = '';
     if (req.query.state) {
-      const params = JSON.parse(decodeURIComponent(req.query.state));
-      if (params.redirect === 'menu') {
-        redirectPath = 'menu';
+      try {
+        const params = JSON.parse(
+          decodeURIComponent(req.query.state as string),
+        );
+        if (params.redirect) {
+          redirectPath = params.redirect;
+        }
         if (params.table) extraParams += `&table=${params.table}`;
         if (params.token) extraParams += `&token=${params.token}`;
+        if (params.qr) extraParams += `&qr=${params.qr}`;
+      } catch (err) {
+        console.error('Failed to parse OAuth state:', err);
       }
     }
     const redirectUrl = `${frontendUrl}/${redirectPath}?auth_token=${authResponse.access_token}&auth_user=${encodeURIComponent(JSON.stringify(authResponse.user))}${extraParams}`;

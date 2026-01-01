@@ -1,65 +1,131 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/shared/components/auth/AuthContext";
+
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, isLoading } = useAuth();
+  const [greeting, setGreeting] = useState("");
+
+  const tableId = searchParams.get("table");
+  const token = searchParams.get("token");
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good Morning");
+    else if (hour < 18) setGreeting("Good Afternoon");
+    else setGreeting("Good Evening");
+  }, []);
+
+  const handleLogin = () => {
+    const params = new URLSearchParams();
+    if (tableId) params.append("table", tableId);
+    if (token) params.append("token", token);
+    router.push(`/login?${params.toString()}`);
+  };
+
+  const handleSignup = () => {
+    const params = new URLSearchParams();
+    if (tableId) params.append("table", tableId);
+    if (token) params.append("token", token);
+    router.push(`/signup?${params.toString()}`);
+  };
+
+  const handleBrowseMenu = () => {
+    const params = new URLSearchParams();
+    if (tableId) params.append("table", tableId);
+    if (token) params.append("token", token);
+    const restaurantId = "1"; // This will be extracted from token/user context
+    router.push(`/restaurant/${restaurantId}?${params.toString()}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f5cb58] flex items-center justify-center pb-24">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f5cb58] flex flex-col items-center justify-center px-9 pb-24">
+      {user ? (
+        // Welcome Message for Logged-in Users
+        <div className="text-center">
+          <div className="mb-6">
+            <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span className="text-5xl">👋</span>
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-2">{greeting}!</h1>
+            <p className="text-2xl text-white font-medium">
+              Welcome back,{" "}
+              {user.firstName || user.lastName
+                ? `${user.firstName || ""} ${user.lastName || ""}`
+                : user.email}
+            </p>
+          </div>
+
+          <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-6 mt-8">
+            <p className="text-white text-lg mb-4">
+              Ready to explore our menu?
+            </p>
+            <button
+              onClick={handleBrowseMenu}
+              className="bg-[#e95322] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#d4441a] transition-colors"
+            >
+              Browse Menu
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Login/Signup Prompt for Guests
+        <div className="text-center">
+          <div className="mb-8">
+            <div className="w-32 h-32 bg-white rounded-full mx-auto mb-6 flex items-center justify-center">
+              <span className="text-7xl">🍽️</span>
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-3">Welcome!</h1>
+            <p className="text-xl text-white/90">
+              Discover delicious food at your fingertips
+            </p>
+          </div>
+
+          <div className="space-y-4 mb-8">
+            <button
+              onClick={handleLogin}
+              className="w-full bg-white text-[#e95322] px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Login
+            </button>
+            <button
+              onClick={handleSignup}
+              className="w-full bg-[#e95322] text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-[#d4441a] transition-colors"
+            >
+              Sign Up
+            </button>
+          </div>
+
+          <div className="pt-4 border-t border-white/30">
+            <button
+              onClick={handleBrowseMenu}
+              className="text-white text-lg hover:underline"
+            >
+              Continue as Guest →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <Suspense fallback={<div className="min-h-screen bg-[#f5cb58]" />}>
+      <HomeContent />
+    </Suspense>
   );
 }

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, League_Spartan } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { ToastProvider } from "@/shared/components/ui";
 import { AuthProvider } from "@/shared/components/auth/AuthContext";
+import { MenuProvider } from "@/shared/components/menu/MenuContext";
 import AppBottomNav from "@/shared/components/AppBottomNav";
 
 const geistSans = Geist({
@@ -13,6 +15,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const leagueSpartan = League_Spartan({
+  variable: "--font-league-spartan",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -28,13 +36,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${leagueSpartan.variable} antialiased`}
       >
         <AuthProvider>
-          <ToastProvider>
-            {children}
-            <AppBottomNav />
-          </ToastProvider>
+          <MenuProvider>
+            <ToastProvider>
+              {children}
+              <Suspense fallback={null}>
+                <AppBottomNav />
+              </Suspense>
+            </ToastProvider>
+          </MenuProvider>
         </AuthProvider>
       </body>
     </html>

@@ -192,7 +192,7 @@ export class AuthService {
   }
 
   async customerGoogleLogin(user: any) {
-    const { email, firstName, lastName } = user;
+    const { email, firstName, lastName, profilePictureUrl } = user;
     let existingCustomer = await this.customerRepo.findOne({
       where: { email },
     });
@@ -204,7 +204,14 @@ export class AuthService {
         role: 'customer',
         firstName,
         lastName,
+        isGoogleLogin: true,
+        googleProfilePicUrl: profilePictureUrl,
       });
+      await this.customerRepo.save(existingCustomer);
+    } else if (!existingCustomer.isGoogleLogin) {
+      // Update existing user if they're now logging in with Google
+      existingCustomer.isGoogleLogin = true;
+      existingCustomer.googleProfilePicUrl = profilePictureUrl;
       await this.customerRepo.save(existingCustomer);
     }
 
@@ -222,6 +229,8 @@ export class AuthService {
         role: existingCustomer.role,
         firstName: existingCustomer.firstName,
         lastName: existingCustomer.lastName,
+        isGoogleLogin: existingCustomer.isGoogleLogin,
+        googleProfilePicUrl: existingCustomer.googleProfilePicUrl,
       },
     };
   }

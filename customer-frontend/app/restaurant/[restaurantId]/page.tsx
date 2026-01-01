@@ -2,22 +2,10 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { Button, Input, Modal, Select } from "@/shared/components/ui";
-import { menuApi } from "@/shared/lib/api/menu";
+import { Search, ShoppingCart, User, Heart, Star, ChefHat } from "lucide-react";
 import type { MenuItemPhoto } from "@/shared/types/menu";
-import {
-  ArrowLeft,
-  User,
-  ChefHat,
-  Menu,
-  Search,
-  Star,
-  Plus,
-  Minus,
-  UtensilsCrossed,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { useAuth } from "@/shared/components/auth/AuthContext";
+import { useMenu } from "@/shared/components/menu/MenuContext";
 
 interface MenuItem {
   id: string;
@@ -33,6 +21,7 @@ interface MenuItem {
   canOrder?: boolean;
   rating?: number;
   reviewCount?: number;
+  popularityScore?: number;
 }
 
 interface ModifierGroup {
@@ -67,60 +56,93 @@ interface MenuData {
   pagination: any;
 }
 
+// Category icons mapping
+const categoryIcons: Record<string, string> = {
+  snacks: "🍟",
+  meal: "🍽️",
+  vegan: "🥗",
+  dessert: "🧁",
+  drinks: "🥤",
+};
+
 function RestaurantMenuPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const {
+    menuData,
+    allMenuItems,
+    bestSellers,
+    recommended,
+    tableInfo,
+    loading: contextLoading,
+    error: contextError,
+    photoUrls,
+    isCacheValid,
+    setMenuCache,
+  } = useMenu();
+
   const restaurantId = params.restaurantId as string;
   const tableId = searchParams.get("table");
   const token = searchParams.get("token");
-  const mode = searchParams.get("mode"); // "guest" or undefined for logged in
 
-  const [menuData, setMenuData] = useState<MenuData | null>(null);
-  const [allMenuItems, setAllMenuItems] = useState<MenuItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cartCount, setCartCount] = useState(0);
-  const [tableInfo, setTableInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(!isCacheValid());
   const [error, setError] = useState<string | null>(null);
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [cartCount, setCartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState("menu");
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const [selectedModifiers, setSelectedModifiers] = useState<
-    Record<string, string[]>
-  >({});
-  const [itemTotal, setItemTotal] = useState(0);
-  const [selectedItemPhotos, setSelectedItemPhotos] = useState<MenuItemPhoto[]>(
-    [],
-  );
-  const [selectedItemPhotoUrls, setSelectedItemPhotoUrls] = useState<
-    Record<string, string>
-  >({});
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
+  // Fetch menu data with caching
   useEffect(() => {
     const fetchMenu = async () => {
-      if (!tableId || !token) {
-        setError("Missing table or token information");
+      // Use cache if valid
+      if (isCacheValid() && menuData && allMenuItems.length > 0) {
         setLoading(false);
+        setFilteredItems(allMenuItems);
         return;
       }
 
       try {
+        setLoading(true);
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/menu?table=${tableId}&token=${token}`,
         );
         const data = await response.json();
 
         if (data.success) {
-          setTableInfo(data.table);
-          setMenuData(data.menu);
-          setAllMenuItems(data.menu.items || []);
-          setFilteredItems(data.menu.items || []);
+          // Fetch photo URLs
+          const urls: Record<string, string> = {};
+          const items = data.menu.items || [];
+
+          for (const item of items) {
+            if (item.primaryPhotoId) {
+              try {
+                const photoResponse = await fetch(
+                  `${process.env.NEXT_PUBLIC_API_URL}/api/menu/items/${item.id}/photos/${item.primaryPhotoId}`,
+                );
+                const blob = await photoResponse.blob();
+                urls[item.id] = URL.createObjectURL(blob);
+              } catch (error) {
+                console.error(
+                  `Failed to load photo for item ${item.id}:`,
+                  error,
+                );
+              }
+            }
+          }
+
+          // Store in cache
+          setMenuCache({
+            menuData: data.menu,
+            tableInfo: data.table,
+            photoUrls: urls,
+          });
+
+          setFilteredItems(items);
+          setError(null);
         } else {
           setError(data.message || "Failed to load menu");
         }
@@ -132,65 +154,29 @@ function RestaurantMenuPageContent() {
       }
     };
 
-    fetchMenu();
-  }, [tableId, token]);
-
-  // Fetch photo URLs when menu items change
-  useEffect(() => {
-    const fetchPhotoUrls = async () => {
-      const urls: Record<string, string> = {};
-      for (const item of allMenuItems) {
-        if (item.primaryPhotoId) {
-          try {
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/menu/items/${item.id}/photos/${item.primaryPhotoId}`,
-            );
-            const blob = await response.blob();
-            urls[item.id] = URL.createObjectURL(blob);
-          } catch (error) {
-            console.error(`Failed to load photo for item ${item.id}:`, error);
-          }
-        }
-      }
-      setPhotoUrls(urls);
-    };
-
-    if (allMenuItems.length > 0) {
-      fetchPhotoUrls();
+    if (tableId && token) {
+      fetchMenu();
     }
+  }, [
+    tableId,
+    token,
+    isCacheValid,
+    menuData,
+    allMenuItems.length,
+    setMenuCache,
+  ]);
 
-    // Cleanup URLs when component unmounts or items change
-    return () => {
-      Object.values(photoUrls).forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [allMenuItems]);
-
-  // Cleanup selected item photo URLs when modal closes
+  // Filter items based on search and category
   useEffect(() => {
-    if (!isItemModalOpen) {
-      Object.values(selectedItemPhotoUrls).forEach((url) =>
-        URL.revokeObjectURL(url),
-      );
-      setSelectedItemPhotoUrls({});
-      setSelectedItemPhotos([]);
-      setCurrentPhotoIndex(0);
-    }
-  }, [isItemModalOpen]);
+    let filtered = [...allMenuItems];
 
-  useEffect(() => {
-    let filtered = allMenuItems;
-
-    // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+      filtered = filtered.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
-    // Filter by category
-    if (selectedCategory !== "all") {
+    if (selectedCategory) {
       filtered = filtered.filter(
         (item) => item.categoryId === selectedCategory,
       );
@@ -199,161 +185,49 @@ function RestaurantMenuPageContent() {
     setFilteredItems(filtered);
   }, [searchQuery, selectedCategory, allMenuItems]);
 
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
+  };
+
+  const toggleFavorite = (itemId: string) => {
+    setFavorites((prev) => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(itemId)) {
+        newFavorites.delete(itemId);
+      } else {
+        newFavorites.add(itemId);
+      }
+      return newFavorites;
+    });
+  };
+
+  const handleProfileClick = () => {
+    router.push("/profile");
+  };
+
+  const getPhotoUrl = (item: MenuItem) => {
+    return photoUrls[item.id] || "https://via.placeholder.com/150";
+  };
+
   const handleBack = () => {
     window.history.back();
   };
 
-  const handleAddToCart = (item: MenuItem) => {
-    // TODO: Add to cart logic
-    setCartCount((prev) => prev + 1);
-    console.log("Added to cart:", item);
-  };
-
-  const handleItemClick = async (item: MenuItem) => {
-    setSelectedItem(item);
-    setQuantity(1);
-    setSelectedModifiers({});
-    setItemTotal(item.price);
-    setCurrentPhotoIndex(0);
-    setIsItemModalOpen(true);
-
-    // Fetch all photos for this item
-    try {
-      const photos = await menuApi.getPhotos(item.id);
-      setSelectedItemPhotos(photos);
-
-      // Fetch photo URLs
-      const urls: Record<string, string> = {};
-      for (const photo of photos) {
-        try {
-          const blob = await menuApi.getPhotoData(item.id, photo.id);
-          urls[photo.id] = URL.createObjectURL(blob);
-        } catch (error) {
-          console.error(`Failed to load photo ${photo.id}:`, error);
-        }
-      }
-      setSelectedItemPhotoUrls(urls);
-    } catch (error) {
-      console.error("Failed to load photos for item:", error);
-      setSelectedItemPhotos([]);
-      setSelectedItemPhotoUrls({});
-    }
-  };
-
-  const handleModifierChange = (
-    groupId: string,
-    optionId: string,
-    isSelected: boolean,
-  ) => {
-    if (!selectedItem) return;
-
-    const group = selectedItem.modifierGroups?.find((g) => g.id === groupId);
-    if (!group) return;
-
-    setSelectedModifiers((prev) => {
-      const currentSelections = prev[groupId] || [];
-      let newSelections: string[];
-
-      if (group.type === "single") {
-        // Single selection: replace current selection
-        newSelections = isSelected ? [optionId] : [];
-      } else {
-        // Multiple selection: add/remove from current selections
-        if (isSelected) {
-          newSelections = [...currentSelections, optionId];
-        } else {
-          newSelections = currentSelections.filter((id) => id !== optionId);
-        }
-
-        // Enforce max selections if specified
-        if (group.maxSelections && newSelections.length > group.maxSelections) {
-          newSelections = newSelections.slice(-group.maxSelections);
-        }
-      }
-
-      return { ...prev, [groupId]: newSelections };
-    });
-  };
-
-  const calculateTotal = () => {
-    if (!selectedItem) return 0;
-
-    let total = selectedItem.price * quantity;
-
-    // Add modifier prices
-    Object.entries(selectedModifiers).forEach(([groupId, optionIds]) => {
-      const group = selectedItem.modifierGroups?.find((g) => g.id === groupId);
-      if (group) {
-        optionIds.forEach((optionId) => {
-          const option = group.options.find((o) => o.id === optionId);
-          if (option) {
-            total += option.price * quantity;
-          }
-        });
-      }
-    });
-
-    return total;
-  };
-
-  const handleAddItemToCart = () => {
-    if (!selectedItem) return;
-
-    // Validate required modifiers
-    const missingRequired = selectedItem.modifierGroups?.filter((group) => {
-      if (!group.required) return false;
-      const selected = selectedModifiers[group.id] || [];
-      return selected.length < (group.minSelections || 1);
-    });
-
-    if (missingRequired && missingRequired.length > 0) {
-      alert(
-        `Please select options for: ${missingRequired.map((g) => g.name).join(", ")}`,
-      );
-      return;
-    }
-
-    // TODO: Add to cart with modifiers and quantity
-    const cartItem = {
-      item: selectedItem,
-      quantity,
-      selectedModifiers,
-      total: calculateTotal(),
-    };
-
-    console.log("Adding to cart:", cartItem);
-    setCartCount((prev) => prev + quantity);
-    setIsItemModalOpen(false);
-  };
-
-  useEffect(() => {
-    setItemTotal(calculateTotal());
-  }, [quantity, selectedModifiers, selectedItem]);
-
-  const categories = [
-    { id: "all", name: "All" },
-    ...(menuData?.categories || []),
-  ];
-
-  const renderStars = (rating: number = 0) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-3 h-3 ${i < rating ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-      />
-    ));
-  };
-
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f5cb58] flex items-center justify-center p-4 pb-24">
         <div className="text-center">
-          <div className="text-red-500 mb-4">
+          <div className="text-white mb-4">
             <ChefHat className="w-12 h-12 mx-auto mb-2" />
             <p className="text-lg font-medium">Unable to load menu</p>
           </div>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+          <p className="text-white/90 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-white text-[#e95322] px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -361,430 +235,267 @@ function RestaurantMenuPageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5cb58] flex items-center justify-center pb-24">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading menu...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Loading menu...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* App Header */}
-      <header className="bg-orange-500 text-white shadow-lg">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-orange-600 p-2"
-              onClick={() => router.push("/profile")}
-            >
-              <User className="w-5 h-5" />
-            </Button>
-            <h1 className="text-lg font-bold">Smart Restaurant</h1>
+    <div className="min-h-screen bg-[#f5cb58] pb-24">
+      {/* Header Section */}
+      <div className="px-9 pt-16 pb-6">
+        {/* Search Bar and Action Buttons */}
+        <div className="flex items-center gap-3 mb-6">
+          {/* Search Bar */}
+          <div className="flex-1 bg-white rounded-[30px] px-4 py-2 flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-[#676767] text-[15px] font-light outline-none placeholder:text-[#676767]"
+            />
+            <Search className="w-5 h-5 text-[#676767]" />
           </div>
-          <div className="bg-orange-600 px-3 py-1 rounded-full text-sm font-medium">
-            Table {tableInfo?.tableNumber || tableId}
-          </div>
-        </div>
-      </header>
 
-      {/* Search Bar */}
-      <div className="bg-white px-4 py-3 border-b">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            type="text"
-            placeholder="Search menu items..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-full border-gray-300 focus:border-orange-500"
-          />
+          {/* Shopping Cart Button */}
+          <button className="bg-[#f5f5f5] rounded-[10px] w-8 h-8 flex items-center justify-center relative">
+            <ShoppingCart className="w-5 h-5 text-[#e95322]" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#e95322] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          {/* Profile Button */}
+          <button
+            onClick={handleProfileClick}
+            className="bg-[#f5f5f5] rounded-[10px] w-8 h-8 flex items-center justify-center"
+          >
+            <User className="w-5 h-5 text-[#391713]" />
+          </button>
         </div>
       </div>
 
-      {/* Category Pills */}
-      <div className="bg-white px-4 py-3 border-b overflow-x-auto">
-        <div className="flex space-x-2 pb-1">
-          {categories.map((category) => (
+      {/* Main Content */}
+      <div className="bg-[#f5f5f5] rounded-t-[30px] min-h-screen pt-8 px-9">
+        {/* Categories Row */}
+        <div className="flex gap-4 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+          {menuData?.categories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                selectedCategory === category.id
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              onClick={() => handleCategoryClick(category.id)}
+              className={`flex-shrink-0 ${
+                selectedCategory === category.id ? "opacity-100" : "opacity-70"
               }`}
             >
-              {category.name}
+              <div
+                className={`${
+                  selectedCategory === category.id
+                    ? "bg-[#f5cb58]"
+                    : "bg-[#f3e9b5]"
+                } rounded-[30px] w-12 h-16 flex flex-col items-center justify-center transition-colors`}
+              >
+                <span className="text-2xl mb-1">
+                  {categoryIcons[category.name.toLowerCase()] || "🍴"}
+                </span>
+              </div>
+              <p className="text-[#391713] text-[12px] text-center mt-2 capitalize">
+                {category.name}
+              </p>
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Menu Items */}
-      <main className="flex-1 px-4 py-4 pb-20">
-        <div className="space-y-4">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => handleItemClick(item)}
-            >
-              <div className="flex items-start space-x-4">
-                {/* Thumbnail */}
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                  {photoUrls[item.id] ? (
-                    <img
-                      src={photoUrls[item.id]}
-                      alt={item.name}
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  ) : (
-                    <UtensilsCrossed className="w-6 h-6 text-orange-600" />
-                  )}
-                </div>
+        {/* Separator Line */}
+        <div className="h-px bg-gray-300 mb-6" />
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-gray-900 truncate">
-                        {item.name}
-                      </h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <div className="flex items-center space-x-1">
-                          {renderStars(item.rating)}
-                        </div>
-                        <span className="text-sm text-gray-500">
-                          ({item.reviewCount || 0})
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right ml-4">
-                      <div className="text-xl font-bold text-orange-600 mb-2">
-                        ${item.price.toFixed(2)}
-                      </div>
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(item);
-                        }}
-                        disabled={!item.canOrder || item.status !== "available"}
-                        className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-4 py-2 h-auto text-sm font-medium"
-                        size="sm"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Quick Add
-                      </Button>
-                    </div>
-                  </div>
-
-                  {item.description && (
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                      {item.description}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          item.status === "available"
-                            ? "bg-green-100 text-green-800"
-                            : item.status === "sold_out"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {item.status === "available"
-                          ? "Available"
-                          : item.status === "sold_out"
-                            ? "Sold Out"
-                            : "Unavailable"}
-                      </span>
-                      {item.isChefRecommended && (
-                        <div className="flex items-center space-x-1 text-orange-600">
-                          <ChefHat className="w-3 h-3" />
-                          <span className="text-xs font-medium">
-                            Chef's Choice
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredItems.length === 0 && (
-          <div className="text-center py-12">
-            <UtensilsCrossed className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500 text-lg">
-              {searchQuery
-                ? "No items match your search"
-                : "No menu items available"}
-            </p>
-          </div>
-        )}
-      </main>
-
-      {/* Item Details Modal */}
-      <Modal
-        isOpen={isItemModalOpen}
-        onClose={() => setIsItemModalOpen(false)}
-        maxWidth="lg"
-        padding="p-0"
-      >
-        {selectedItem && (
-          <div className="bg-white rounded-2xl overflow-hidden">
-            {/* Item Image/Header with Carousel */}
-            <div className="relative h-48 bg-gradient-to-br from-orange-100 to-orange-200">
-              {selectedItemPhotos.length > 0 &&
-              selectedItemPhotoUrls[
-                selectedItemPhotos[currentPhotoIndex]?.id
-              ] ? (
-                <img
-                  src={
-                    selectedItemPhotoUrls[
-                      selectedItemPhotos[currentPhotoIndex].id
-                    ]
-                  }
-                  alt={selectedItem.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <UtensilsCrossed className="w-16 h-16 text-orange-600" />
-                </div>
-              )}
-
-              {/* Photo Navigation */}
-              {selectedItemPhotos.length > 1 && (
-                <>
-                  <button
-                    onClick={() =>
-                      setCurrentPhotoIndex((prev) =>
-                        prev > 0 ? prev - 1 : selectedItemPhotos.length - 1,
-                      )
-                    }
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPhotoIndex((prev) =>
-                        prev < selectedItemPhotos.length - 1 ? prev + 1 : 0,
-                      )
-                    }
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5 text-gray-600" />
-                  </button>
-
-                  {/* Photo Indicators */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-                    {selectedItemPhotos.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentPhotoIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          index === currentPhotoIndex
-                            ? "bg-white"
-                            : "bg-white/50"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {/* Primary Photo Indicator */}
-              {selectedItemPhotos[currentPhotoIndex]?.isPrimary && (
-                <div className="absolute top-4 left-4 bg-orange-500 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-white" />
-                  Primary
-                </div>
-              )}
-
-              <button
-                onClick={() => setIsItemModalOpen(false)}
-                className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+        {/* Best Seller Section */}
+        {bestSellers.length > 0 && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-[#391713] font-medium text-[20px]">
+                Best Seller
+              </h2>
+              <button className="text-[#e95322] text-[12px] font-semibold">
+                View All
               </button>
             </div>
 
-            {/* Item Details */}
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {selectedItem.name}
-                  </h2>
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="flex items-center space-x-1">
-                      {renderStars(selectedItem.rating)}
+            {/* Best Seller Items Grid */}
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {bestSellers.map((item) => (
+                <div key={item.id} className="relative">
+                  <div className="relative rounded-[20px] overflow-hidden h-28 bg-gray-200">
+                    <img
+                      src={getPhotoUrl(item)}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Price Tag */}
+                    <div className="absolute bottom-0 left-0 bg-[#e95322] rounded-tl-[30px] rounded-br-[20px] px-2 py-1">
+                      <span className="text-white text-[12px] font-normal">
+                        ${item.price.toFixed(2)}
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-500">
-                      ({selectedItem.reviewCount || 0} reviews)
+                  </div>
+                  {/* Rating Badge */}
+                  <div className="absolute top-28 left-2 bg-white rounded-[30px] px-2 py-0.5 flex items-center gap-1">
+                    <span className="text-[#391713] text-[12px] font-normal">
+                      5.0
                     </span>
+                    <Star className="w-2 h-2 fill-yellow-400 text-yellow-400" />
                   </div>
-                  {selectedItem.description && (
-                    <p className="text-gray-600 mb-4">
-                      {selectedItem.description}
-                    </p>
-                  )}
+                  {/* Favorite Button */}
+                  <button
+                    onClick={() => toggleFavorite(item.id)}
+                    className="absolute top-1 right-1"
+                  >
+                    <Heart
+                      className={`w-3.5 h-3.5 ${
+                        favorites.has(item.id)
+                          ? "fill-[#e95322] text-[#e95322]"
+                          : "fill-transparent text-[#e95322]"
+                      }`}
+                    />
+                  </button>
                 </div>
-                <div className="text-right ml-4">
-                  <div className="text-2xl font-bold text-orange-600">
-                    ${selectedItem.price.toFixed(2)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Modifiers */}
-              {selectedItem.modifierGroups &&
-                selectedItem.modifierGroups.length > 0 && (
-                  <div className="space-y-6 mb-6">
-                    {selectedItem.modifierGroups.map((group) => (
-                      <div key={group.id} className="border-t pt-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {group.name}
-                            {group.required && (
-                              <span className="text-red-500 ml-1">*</span>
-                            )}
-                          </h3>
-                          {group.type === "multiple" && group.maxSelections && (
-                            <span className="text-sm text-gray-500">
-                              Select up to {group.maxSelections}
-                            </span>
-                          )}
-                        </div>
-                        {group.description && (
-                          <p className="text-sm text-gray-600 mb-3">
-                            {group.description}
-                          </p>
-                        )}
-
-                        <div className="space-y-2">
-                          {group.options.map((option) => {
-                            const isSelected = (
-                              selectedModifiers[group.id] || []
-                            ).includes(option.id);
-                            return (
-                              <label
-                                key={option.id}
-                                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                                  isSelected
-                                    ? "border-orange-500 bg-orange-50"
-                                    : "border-gray-200 hover:border-gray-300"
-                                }`}
-                              >
-                                <div className="flex items-center space-x-3">
-                                  {group.type === "multiple" ? (
-                                    <input
-                                      type="checkbox"
-                                      checked={isSelected}
-                                      onChange={(e) =>
-                                        handleModifierChange(
-                                          group.id,
-                                          option.id,
-                                          e.target.checked,
-                                        )
-                                      }
-                                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                                    />
-                                  ) : (
-                                    <input
-                                      type="radio"
-                                      name={`modifier-${group.id}`}
-                                      checked={isSelected}
-                                      onChange={() =>
-                                        handleModifierChange(
-                                          group.id,
-                                          option.id,
-                                          true,
-                                        )
-                                      }
-                                      className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500"
-                                    />
-                                  )}
-                                  <div>
-                                    <span className="font-medium text-gray-900">
-                                      {option.name}
-                                    </span>
-                                    {option.description && (
-                                      <p className="text-sm text-gray-600">
-                                        {option.description}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                                {option.price > 0 && (
-                                  <span className="text-sm font-medium text-gray-900">
-                                    +${option.price.toFixed(2)}
-                                  </span>
-                                )}
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-              {/* Quantity and Total */}
-              <div className="border-t pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-semibold text-gray-900">
-                    Quantity
-                  </span>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-8 text-center font-medium">
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-xl font-bold text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-orange-600">
-                    ${itemTotal.toFixed(2)}
-                  </span>
-                </div>
-
-                <Button
-                  onClick={handleAddItemToCart}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-lg font-semibold"
-                >
-                  Add to Cart - ${itemTotal.toFixed(2)}
-                </Button>
-              </div>
+              ))}
             </div>
           </div>
         )}
-      </Modal>
+
+        {/* Banner/Promo Section */}
+        <div className="relative bg-gradient-to-r from-[#e95322] to-[#d4441a] rounded-[20px] h-32 mb-8 overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-start px-6">
+            <div className="text-white">
+              <p className="text-[16px] font-normal mb-2">
+                Experience our delicious new dish
+              </p>
+              <p className="text-[32px] font-bold">30% OFF</p>
+            </div>
+          </div>
+          {/* Decorative circles */}
+          <div className="absolute -bottom-6 -left-4 w-14 h-14 bg-yellow-300 rounded-full opacity-30" />
+          <div className="absolute -top-8 left-28 w-14 h-14 bg-yellow-300 rounded-full opacity-20" />
+        </div>
+
+        {/* Pagination Dots */}
+        <div className="flex justify-center gap-2 mb-6">
+          <div className="w-5 h-1 bg-[#e95322] rounded-full" />
+          <div className="w-5 h-1 bg-[#f3e9b5] rounded-full" />
+          <div className="w-5 h-1 bg-[#f3e9b5] rounded-full" />
+          <div className="w-5 h-1 bg-[#f3e9b5] rounded-full" />
+          <div className="w-5 h-1 bg-[#f3e9b5] rounded-full" />
+        </div>
+
+        {/* Recommend Section */}
+        {recommended.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-[#391713] font-medium text-[20px] mb-4">
+              Recommend
+            </h2>
+
+            {/* Recommended Items */}
+            <div className="grid grid-cols-2 gap-4">
+              {recommended.map((item) => (
+                <div key={item.id} className="relative">
+                  <div className="relative rounded-[20px] overflow-hidden h-36 bg-gray-200">
+                    <img
+                      src={getPhotoUrl(item)}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Rating Badge */}
+                    <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center gap-1">
+                      <span className="text-[#391713] text-[12px] font-normal">
+                        5.0
+                      </span>
+                      <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                    </div>
+                    {/* Price Tag */}
+                    <div className="absolute bottom-0 left-0 bg-[#e95322] rounded-tl-[30px] rounded-br-[20px] px-3 py-1.5">
+                      <span className="text-white text-[12px] font-normal">
+                        ${item.price.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Favorite Button */}
+                  <button
+                    onClick={() => toggleFavorite(item.id)}
+                    className="absolute top-1 right-1"
+                  >
+                    <Heart
+                      className={`w-3.5 h-3.5 ${
+                        favorites.has(item.id)
+                          ? "fill-[#e95322] text-[#e95322]"
+                          : "fill-transparent text-[#e95322]"
+                      }`}
+                    />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All Items Section */}
+        {filteredItems.length > 0 && (
+          <div className="pb-8">
+            <h2 className="text-[#391713] font-medium text-[20px] mb-4">
+              {selectedCategory ? "Filtered Items" : "All Items"}
+            </h2>
+
+            {/* Items Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {filteredItems.slice(0, 10).map((item) => (
+                <div key={item.id} className="relative">
+                  <div className="relative rounded-[20px] overflow-hidden h-36 bg-gray-200">
+                    <img
+                      src={getPhotoUrl(item)}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Price Tag */}
+                    <div className="absolute bottom-0 left-0 bg-[#e95322] rounded-tl-[30px] rounded-br-[20px] px-3 py-1.5">
+                      <span className="text-white text-[12px] font-normal">
+                        ${item.price.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Item Name */}
+                  <p className="text-[#391713] text-[14px] mt-2 truncate">
+                    {item.name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {filteredItems.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-[#676767] text-lg">No items found</p>
+          </div>
+        )}
+      </div>
+
+      {/* Add custom styles for scrollbar hide */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }
@@ -793,7 +504,7 @@ export default function RestaurantMenuPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-[#f5cb58] flex items-center justify-center pb-24">
           Loading...
         </div>
       }

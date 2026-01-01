@@ -19,4 +19,22 @@ export class Customer {
 
   @Column({ nullable: true })
   lastName: string;
+
+  @Column({ nullable: true })
+  dateOfBirth: string;
+
+  @Column({ nullable: true })
+  phoneNumber: string;
+
+  @Column({ type: 'longblob', nullable: true })
+  profilePicture: Buffer;
+
+  @Column({ nullable: true })
+  googleId: string;
+
+  @Column({ default: false })
+  isGoogleLogin: boolean;
+
+  @Column({ nullable: true })
+  googleProfilePicUrl: string;
 }

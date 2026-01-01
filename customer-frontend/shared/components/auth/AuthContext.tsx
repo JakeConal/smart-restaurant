@@ -28,7 +28,7 @@ interface AuthContextType {
   token: string | null;
   login: (data: LoginRequest) => Promise<void>;
   signup: (data: SignupRequest) => Promise<void>;
-  googleLogin: () => Promise<void>;
+  googleLogin: (queryParams?: URLSearchParams) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -47,8 +47,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem("authUser");
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch (err) {
+        console.error("Failed to parse stored user data:", err);
+        // Clear invalid data
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUser");
+      }
     }
     setIsLoading(false);
   }, []);
@@ -87,10 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const googleLogin = async () => {
+  const googleLogin = async (queryParams?: URLSearchParams) => {
     try {
       setIsLoading(true);
-      await authApi.googleLogin();
+      await authApi.googleLogin(queryParams);
     } catch (authError) {
       showError("Google login failed. Please try again.");
       throw authError;

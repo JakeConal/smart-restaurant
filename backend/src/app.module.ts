@@ -22,6 +22,7 @@ import { ModifierOption } from './schema/modifier-option.schema';
 import { ModifierOptionModule } from './modifier-option/modifier-option.module';
 import { MenuItemModifierModule } from './menu-item-modifier/menu-item-modifier.module';
 import { MenuItemModifierGroup } from './schema/menu-item-modifier.schema';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { MenuItemModifierGroup } from './schema/menu-item-modifier.schema';
     ModifierGroupModule,
     ModifierOptionModule,
     MenuItemModifierModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
